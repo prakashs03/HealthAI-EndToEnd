@@ -9,5 +9,6 @@ tensorflow
 mlxtend
 Pillow
 google-generativeai
-textblob
 deep-translator
+textblob
+opencv-python-headless
