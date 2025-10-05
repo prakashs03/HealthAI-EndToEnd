@@ -1,16 +1,39 @@
+# --- Core Frameworks ---
 streamlit
 pandas
 numpy
-plotly
-matplotlib
 scikit-learn
 tensorflow
 torch
-torchvision
-google-generativeai
-deep-translator
-textblob
+mlxtend
+ffmpeg-python
+
+# --- Data Visualization ---
+plotly
+matplotlib
+seaborn
+
+# --- NLP / Translation / Sentiment ---
 transformers
-opencv-python
+textblob
+deep-translator
+google-generativeai
+
+# --- Audio and Speech ---
+gTTS
+SpeechRecognition
+pydub
+
+# --- Image Processing ---
+opencv-python-headless
 Pillow
-nltk
+
+# --- Utility / Miscellaneous ---
+requests
+fastapi
+uvicorn
+joblib
+tqdm
+
+# --- For file handling and deployment ---
+python-multipart
