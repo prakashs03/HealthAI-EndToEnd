@@ -6,6 +6,7 @@ scikit-learn
 tensorflow
 torch
 mlxtend
+ffmpeg-python
 
 # --- Data Visualization ---
 plotly
