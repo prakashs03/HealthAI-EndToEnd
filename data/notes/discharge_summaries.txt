@@ -1,0 +1,5 @@
+Patient discharged after 5 days of hospitalization for pneumonia. Responded well to antibiotics. Advised rest and follow-up in 2 weeks.
+Patient admitted for chest pain; diagnosed with stable angina. Underwent angiogram and started on beta blockers.
+Patient admitted for uncontrolled diabetes. Insulin therapy initiated. Blood sugar under control at discharge.
+Patient treated for hypertension. Blood pressure stable after medication adjustment.
+Patient recovered from mild asthma exacerbation. No wheezing at discharge. Advised to continue inhaler therapy.

@@ -1,0 +1,26 @@
+{
+  "feedbacks": [
+    "The doctors were very caring and professional.",
+    "I had to wait too long for my appointment.",
+    "Nurses explained everything clearly.",
+    "The service was terrible and staff were rude."
+  ],
+  "results": [
+    {
+      "label": "POSITIVE",
+      "score": 0.9989097118377686
+    },
+    {
+      "label": "NEGATIVE",
+      "score": 0.9992673993110657
+    },
+    {
+      "label": "POSITIVE",
+      "score": 0.9200560450553894
+    },
+    {
+      "label": "NEGATIVE",
+      "score": 0.9993802309036255
+    }
+  ]
+}

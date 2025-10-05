@@ -1,0 +1,21 @@
+timestamp,user_query,chatbot_response,sentiment_score,user_feedback
+2025-10-05 14:12:05.976312,Translate this to Tamil,Maintain a healthy diet and exercise regularly.,0.6276151539534542,Negative
+2025-10-05 14:07:05.976325,What are early symptoms of diabetes?,தமிழில் இதை மொழிபெயர்க்கவும்.,0.7633228945869297,Neutral
+2025-10-05 14:02:05.976328,I want to know my heart risk,தமிழில் இதை மொழிபெயர்க்கவும்.,0.614039231824001,Neutral
+2025-10-05 13:57:05.976331,I want to know my heart risk,"Heart risk depends on age, BP, and cholesterol.",0.7201071551798174,Positive
+2025-10-05 13:52:05.976333,I want to know my heart risk,Avoid smoking and get vaccinated for flu.,0.8690741979070176,Neutral
+2025-10-05 13:47:05.976336,How to reduce cholesterol?,Consult a physician if you have fatigue or thirst.,0.8232313564673222,Negative
+2025-10-05 13:42:05.976338,Translate this to Tamil,Avoid smoking and get vaccinated for flu.,0.6678211879075513,Negative
+2025-10-05 13:37:05.976341,I want to know my heart risk,Consult a physician if you have fatigue or thirst.,0.9185297066045014,Neutral
+2025-10-05 13:32:05.976343,How to reduce cholesterol?,"Heart risk depends on age, BP, and cholesterol.",0.7348841497563177,Neutral
+2025-10-05 13:27:05.976345,Translate this to Tamil,Consult a physician if you have fatigue or thirst.,0.7239435037013275,Positive
+2025-10-05 13:22:05.976346,What are early symptoms of diabetes?,தமிழில் இதை மொழிபெயர்க்கவும்.,0.42051265956349493,Neutral
+2025-10-05 13:17:05.976348,How to reduce cholesterol?,Maintain a healthy diet and exercise regularly.,0.9920157882142969,Positive
+2025-10-05 13:12:05.976349,Tell me about pneumonia prevention,Maintain a healthy diet and exercise regularly.,0.47378248511777604,Positive
+2025-10-05 13:07:05.976350,How to reduce cholesterol?,"Heart risk depends on age, BP, and cholesterol.",0.5386785474565879,Negative
+2025-10-05 13:02:05.976352,How to reduce cholesterol?,தமிழில் இதை மொழிபெயர்க்கவும்.,0.4310181023449162,Negative
+2025-10-05 12:57:05.976353,Translate this to Tamil,Avoid smoking and get vaccinated for flu.,0.7840017801021482,Negative
+2025-10-05 12:52:05.976354,What are early symptoms of diabetes?,தமிழில் இதை மொழிபெயர்க்கவும்.,0.534820706183608,Negative
+2025-10-05 12:47:05.976356,Tell me about pneumonia prevention,Maintain a healthy diet and exercise regularly.,0.5080062624836341,Neutral
+2025-10-05 12:42:05.976357,I want to know my heart risk,Maintain a healthy diet and exercise regularly.,0.4531333505339449,Negative
+2025-10-05 12:37:05.976359,I want to know my heart risk,தமிழில் இதை மொழிபெயர்க்கவும்.,0.46198537427440944,Neutral

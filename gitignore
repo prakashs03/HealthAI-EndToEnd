@@ -1,0 +1,30 @@
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Streamlit secrets
+.streamlit/secrets.toml
+
+# Model files and saved outputs
+saved_models/
+reports/
+*.pkl
+*.h5
+
+# Virtual environments
+env/
+venv/
+
+# System and IDE files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Temporary data
+*.tmp
+*.log
+*.bak

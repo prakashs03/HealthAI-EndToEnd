@@ -1,0 +1,6 @@
+Patient 101: Diagnosed with Type 2 Diabetes. Blood sugar consistently high. Prescribed Metformin and advised dietary control.
+Patient 102: Shows symptoms of hypertension. Blood pressure recorded at 150/95 mmHg. Started on low sodium diet and ACE inhibitors.
+Patient 103: Mild asthma detected. Recommended use of inhaler twice daily.
+Patient 104: Suspected heart disease due to shortness of breath and chest discomfort. ECG ordered.
+Patient 105: Fever and cough for 5 days. Chest X-ray shows mild infection — antibiotics prescribed.
+Patient 106: Complains of joint pain and stiffness. Probable rheumatoid arthritis. Referred to rheumatologist.

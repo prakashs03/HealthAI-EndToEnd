@@ -1,0 +1,16 @@
+streamlit
+pandas
+numpy
+plotly
+matplotlib
+scikit-learn
+tensorflow
+torch
+torchvision
+google-generativeai
+deep-translator
+textblob
+transformers
+opencv-python
+Pillow
+nltk

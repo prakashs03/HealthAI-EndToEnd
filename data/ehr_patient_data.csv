@@ -1,0 +1,201 @@
+patient_id,age,gender,bmi,blood_pressure,cholesterol,glucose,diagnosis,admission_date,length_of_stay,outcome
+1,76,F,31.2,149,210,120,Diabetes,2024-08-14,14,Readmitted
+2,39,F,22.1,127,171,141,Hypertension,2024-11-05,5,Referred
+3,85,M,28.8,127,298,111,Hypertension,2024-04-07,2,Readmitted
+4,45,F,19.9,136,219,133,Hypertension,2024-02-24,11,Recovered
+5,48,F,19.4,140,150,84,Healthy,2024-04-20,9,Referred
+6,27,F,27.3,135,282,98,Heart Disease,2024-05-31,8,Recovered
+7,46,F,27.4,126,161,102,Heart Disease,2024-09-02,3,Recovered
+8,77,M,29.0,153,239,163,Hypertension,2024-03-09,11,Readmitted
+9,26,F,30.5,116,195,172,Heart Disease,2024-11-07,12,Referred
+10,54,F,34.6,108,183,96,Heart Disease,2024-10-15,13,Referred
+11,62,M,27.0,132,227,105,Healthy,2024-09-06,9,Readmitted
+12,26,M,23.8,152,194,98,Diabetes,2024-02-05,3,Recovered
+13,88,F,31.6,119,222,107,Hypertension,2024-08-26,9,Recovered
+14,84,F,23.0,112,175,126,Hypertension,2024-05-27,2,Recovered
+15,45,F,25.7,127,196,166,Healthy,2024-08-14,12,Recovered
+16,57,F,19.8,147,270,170,Healthy,2024-08-31,10,Referred
+17,82,F,18.9,128,205,96,Heart Disease,2024-12-02,9,Referred
+18,46,F,34.4,112,243,124,Hypertension,2024-12-30,8,Readmitted
+19,73,M,32.3,145,256,102,Diabetes,2024-07-19,9,Readmitted
+20,83,F,30.0,134,212,137,Healthy,2024-06-02,5,Referred
+21,66,F,25.2,105,197,155,Diabetes,2024-03-13,11,Referred
+22,84,M,21.4,117,210,135,Diabetes,2024-07-19,11,Recovered
+23,39,M,21.1,150,230,79,Hypertension,2024-10-22,2,Recovered
+24,86,M,22.6,104,175,74,Hypertension,2024-01-17,8,Readmitted
+25,86,M,27.6,146,185,143,Healthy,2024-05-08,12,Referred
+26,71,F,30.3,124,150,166,Hypertension,2024-08-04,6,Readmitted
+27,86,F,29.4,101,157,107,Hypertension,2024-03-01,8,Referred
+28,75,F,23.1,109,262,82,Hypertension,2024-04-13,11,Recovered
+29,79,F,34.3,155,248,100,Diabetes,2024-02-11,5,Readmitted
+30,88,F,30.7,129,196,116,Healthy,2024-01-25,10,Readmitted
+31,27,F,27.6,149,276,169,Heart Disease,2024-02-08,2,Referred
+32,75,M,28.6,158,205,178,Diabetes,2024-10-17,6,Recovered
+33,31,F,25.4,144,163,157,Hypertension,2024-05-10,5,Readmitted
+34,45,M,22.6,104,177,121,Diabetes,2024-08-16,12,Recovered
+35,63,M,24.4,154,227,125,Hypertension,2024-04-17,13,Readmitted
+36,42,F,31.0,155,279,84,Hypertension,2024-06-20,12,Recovered
+37,28,M,18.7,132,258,98,Diabetes,2024-04-11,5,Referred
+38,84,F,20.4,153,163,77,Healthy,2024-12-19,13,Readmitted
+39,38,M,19.3,100,205,74,Hypertension,2024-01-12,1,Readmitted
+40,33,F,19.2,117,264,98,Healthy,2024-10-01,2,Recovered
+41,77,M,32.6,131,156,116,Heart Disease,2024-04-10,8,Recovered
+42,26,F,30.1,146,152,137,Hypertension,2024-02-13,13,Readmitted
+43,84,F,26.3,148,260,145,Healthy,2024-10-31,14,Referred
+44,68,F,20.1,110,256,114,Healthy,2024-01-17,13,Recovered
+45,32,F,26.6,120,167,71,Heart Disease,2024-11-25,3,Recovered
+46,71,F,26.3,125,187,96,Healthy,2024-02-26,10,Recovered
+47,59,M,21.4,124,264,164,Healthy,2024-11-06,3,Readmitted
+48,60,M,25.7,121,164,105,Heart Disease,2024-10-29,8,Readmitted
+49,74,M,25.1,158,268,105,Hypertension,2024-01-12,8,Readmitted
+50,28,F,28.7,126,177,95,Healthy,2024-11-13,2,Readmitted
+51,26,M,29.0,148,188,112,Healthy,2024-03-20,8,Referred
+52,30,F,19.2,112,166,96,Healthy,2024-08-03,11,Referred
+53,78,F,24.7,132,235,138,Diabetes,2024-12-04,13,Readmitted
+54,28,M,28.8,133,275,89,Heart Disease,2024-09-20,13,Referred
+55,78,M,26.8,140,193,80,Diabetes,2024-05-28,1,Recovered
+56,87,F,32.6,134,174,143,Heart Disease,2024-03-21,6,Recovered
+57,42,M,29.4,100,294,173,Hypertension,2024-08-02,8,Recovered
+58,68,F,21.2,120,162,107,Hypertension,2024-07-16,3,Readmitted
+59,58,F,19.7,147,174,75,Healthy,2024-07-18,8,Recovered
+60,86,F,29.1,154,217,141,Heart Disease,2024-01-25,12,Referred
+61,38,F,18.9,105,287,92,Hypertension,2024-03-29,1,Readmitted
+62,72,F,28.2,127,216,116,Heart Disease,2024-09-24,11,Referred
+63,39,M,34.0,116,258,159,Hypertension,2024-05-22,11,Recovered
+64,86,M,28.0,104,295,115,Diabetes,2024-02-28,9,Recovered
+65,64,F,24.9,130,260,176,Hypertension,2024-12-30,13,Recovered
+66,77,F,29.1,104,260,81,Diabetes,2024-01-26,11,Readmitted
+67,48,M,26.1,137,183,159,Hypertension,2024-02-16,13,Referred
+68,50,M,27.5,102,260,82,Healthy,2024-10-14,9,Readmitted
+69,84,F,34.0,152,157,173,Diabetes,2024-09-22,5,Readmitted
+70,65,M,24.9,122,262,131,Hypertension,2024-01-16,10,Recovered
+71,53,F,34.4,136,232,151,Healthy,2024-07-17,4,Readmitted
+72,39,M,33.4,152,191,158,Diabetes,2024-10-08,11,Readmitted
+73,69,F,21.7,136,250,166,Healthy,2024-03-26,6,Recovered
+74,89,M,19.6,109,155,173,Heart Disease,2024-09-06,12,Readmitted
+75,33,F,20.2,109,175,129,Heart Disease,2024-09-26,7,Recovered
+76,25,M,18.8,118,213,112,Diabetes,2024-11-30,5,Recovered
+77,32,M,20.1,116,208,145,Hypertension,2024-04-26,11,Recovered
+78,87,F,29.8,120,258,177,Diabetes,2024-01-07,13,Recovered
+79,35,M,19.7,113,270,169,Healthy,2024-05-16,10,Readmitted
+80,32,F,23.8,108,182,137,Hypertension,2024-06-24,9,Recovered
+81,59,M,32.4,145,299,74,Heart Disease,2024-11-23,3,Recovered
+82,59,F,18.9,100,170,106,Hypertension,2024-11-10,7,Readmitted
+83,57,M,31.9,150,219,141,Heart Disease,2024-08-02,10,Readmitted
+84,29,F,23.2,144,261,175,Hypertension,2024-03-22,10,Referred
+85,65,M,20.4,112,153,161,Hypertension,2024-08-10,11,Readmitted
+86,52,F,30.0,103,243,100,Hypertension,2024-04-12,5,Readmitted
+87,31,M,28.9,100,224,78,Healthy,2024-09-29,14,Referred
+88,36,F,33.0,148,211,120,Healthy,2024-01-14,7,Readmitted
+89,58,F,30.6,139,243,98,Diabetes,2024-06-07,2,Readmitted
+90,57,F,31.8,131,244,147,Diabetes,2024-05-31,4,Readmitted
+91,72,M,23.2,133,204,109,Heart Disease,2024-04-17,2,Readmitted
+92,47,F,21.4,127,286,110,Healthy,2024-07-06,14,Referred
+93,86,M,30.9,130,280,155,Heart Disease,2024-10-27,13,Readmitted
+94,61,F,31.8,107,180,80,Diabetes,2024-04-07,13,Readmitted
+95,68,M,34.8,138,189,92,Heart Disease,2024-05-10,12,Referred
+96,59,F,25.3,125,185,70,Diabetes,2024-10-19,7,Recovered
+97,89,M,24.6,157,155,115,Healthy,2024-06-19,2,Referred
+98,71,M,31.3,133,215,170,Hypertension,2024-07-01,13,Recovered
+99,27,F,24.1,153,224,90,Healthy,2024-12-29,14,Referred
+100,25,M,33.9,153,153,159,Heart Disease,2024-02-08,11,Referred
+101,29,M,32.7,102,228,179,Heart Disease,2024-01-15,1,Readmitted
+102,38,F,25.6,158,283,105,Healthy,2024-01-04,9,Recovered
+103,51,M,30.9,149,267,123,Healthy,2024-12-14,1,Readmitted
+104,33,M,30.9,111,262,156,Diabetes,2024-07-28,8,Recovered
+105,39,M,20.2,100,243,126,Heart Disease,2024-06-09,2,Referred
+106,66,F,33.4,153,211,70,Heart Disease,2024-01-16,12,Referred
+107,75,M,26.8,143,228,132,Healthy,2024-04-17,8,Recovered
+108,87,F,32.1,104,285,123,Hypertension,2024-11-06,13,Readmitted
+109,76,M,23.8,129,175,124,Heart Disease,2024-08-14,3,Readmitted
+110,28,M,33.3,129,193,109,Hypertension,2024-06-18,6,Readmitted
+111,47,M,24.9,158,282,84,Healthy,2024-02-03,3,Readmitted
+112,39,F,18.7,156,219,90,Healthy,2024-09-07,14,Referred
+113,67,M,33.4,116,267,116,Diabetes,2024-09-03,7,Referred
+114,53,M,20.0,147,217,142,Heart Disease,2024-09-25,10,Referred
+115,60,F,23.8,146,168,122,Hypertension,2024-05-20,9,Referred
+116,37,M,34.2,122,169,78,Diabetes,2024-09-30,2,Referred
+117,56,F,34.2,114,262,143,Heart Disease,2024-04-05,12,Readmitted
+118,83,F,28.0,136,289,121,Diabetes,2024-08-14,12,Readmitted
+119,52,M,28.9,120,196,126,Healthy,2024-02-08,14,Readmitted
+120,66,F,25.9,113,150,95,Heart Disease,2024-10-28,5,Readmitted
+121,69,M,23.3,101,239,110,Diabetes,2024-01-29,13,Referred
+122,86,F,23.9,110,291,104,Diabetes,2024-11-13,6,Referred
+123,81,F,29.6,150,213,132,Hypertension,2024-09-01,4,Referred
+124,30,M,30.9,138,187,94,Diabetes,2024-08-23,4,Recovered
+125,52,F,31.6,137,186,159,Heart Disease,2024-07-03,4,Readmitted
+126,52,F,31.5,159,275,144,Heart Disease,2024-09-28,2,Readmitted
+127,68,F,20.0,133,288,107,Hypertension,2024-08-23,4,Referred
+128,54,F,26.7,137,249,71,Heart Disease,2024-08-26,11,Readmitted
+129,86,F,19.4,149,226,76,Healthy,2024-09-22,1,Readmitted
+130,86,M,27.6,133,152,151,Heart Disease,2024-12-24,12,Referred
+131,25,F,25.8,117,283,160,Heart Disease,2024-12-05,6,Recovered
+132,51,M,33.1,129,159,103,Diabetes,2024-03-05,1,Recovered
+133,86,F,24.3,114,154,160,Diabetes,2024-06-25,10,Recovered
+134,27,M,20.4,126,287,86,Heart Disease,2024-01-03,6,Referred
+135,51,M,20.9,150,279,112,Hypertension,2024-05-21,1,Readmitted
+136,33,F,31.1,133,162,128,Diabetes,2024-06-06,6,Referred
+137,86,F,28.7,151,279,177,Hypertension,2024-11-19,10,Referred
+138,61,F,20.2,156,233,120,Heart Disease,2024-05-25,8,Readmitted
+139,75,M,19.9,137,214,123,Heart Disease,2024-10-19,11,Recovered
+140,68,F,30.1,132,212,93,Healthy,2024-06-01,2,Recovered
+141,48,M,19.7,123,250,94,Diabetes,2024-07-11,2,Referred
+142,83,M,32.1,114,222,140,Heart Disease,2024-03-13,14,Recovered
+143,56,M,30.2,159,166,121,Healthy,2024-10-31,13,Referred
+144,76,F,19.8,129,158,139,Diabetes,2024-12-09,12,Referred
+145,86,F,19.9,154,292,157,Heart Disease,2024-05-19,4,Readmitted
+146,82,M,34.8,141,187,102,Heart Disease,2024-07-05,11,Readmitted
+147,76,M,24.7,150,243,118,Diabetes,2024-10-19,3,Readmitted
+148,36,F,24.6,116,244,98,Diabetes,2024-03-01,4,Referred
+149,63,M,31.9,104,198,132,Diabetes,2024-07-16,13,Readmitted
+150,26,F,34.1,128,218,176,Heart Disease,2024-10-21,12,Recovered
+151,27,M,34.8,103,211,91,Heart Disease,2024-11-14,7,Recovered
+152,80,F,30.9,109,227,95,Healthy,2024-10-28,13,Referred
+153,83,M,24.7,155,266,97,Hypertension,2024-12-09,11,Referred
+154,26,F,19.9,116,269,154,Diabetes,2024-01-11,1,Readmitted
+155,26,M,31.3,109,286,118,Heart Disease,2024-03-02,6,Referred
+156,78,F,27.7,116,225,140,Heart Disease,2024-11-28,3,Referred
+157,25,F,25.5,159,184,150,Diabetes,2024-08-13,11,Recovered
+158,43,M,33.5,119,150,153,Hypertension,2024-06-01,10,Recovered
+159,26,M,20.3,123,189,174,Diabetes,2024-07-17,7,Readmitted
+160,77,F,26.6,104,213,118,Hypertension,2024-02-21,10,Referred
+161,68,M,18.7,133,299,89,Heart Disease,2024-09-16,2,Referred
+162,56,F,26.2,105,209,155,Hypertension,2024-02-28,14,Recovered
+163,56,M,19.4,152,213,161,Healthy,2024-03-12,2,Referred
+164,79,F,20.5,101,242,132,Heart Disease,2024-05-27,13,Recovered
+165,80,F,20.4,112,221,130,Healthy,2024-12-14,4,Readmitted
+166,41,F,29.2,142,160,173,Diabetes,2024-03-03,1,Recovered
+167,62,F,30.8,142,254,118,Diabetes,2024-11-05,3,Referred
+168,48,F,28.1,147,163,140,Diabetes,2024-08-30,13,Readmitted
+169,35,F,34.4,110,209,70,Hypertension,2024-11-25,9,Recovered
+170,40,M,24.7,150,179,165,Heart Disease,2024-04-16,7,Recovered
+171,83,M,23.2,146,184,82,Diabetes,2024-08-13,7,Readmitted
+172,27,M,32.8,156,154,163,Diabetes,2024-11-08,13,Readmitted
+173,44,F,22.2,122,232,156,Heart Disease,2024-08-05,13,Recovered
+174,83,F,34.4,154,272,120,Diabetes,2024-08-28,11,Referred
+175,60,F,18.7,115,227,125,Healthy,2024-09-15,4,Recovered
+176,43,F,34.5,130,211,152,Heart Disease,2024-09-18,2,Readmitted
+177,43,M,19.2,110,281,131,Heart Disease,2024-01-05,14,Recovered
+178,44,M,33.2,153,238,101,Heart Disease,2024-09-17,4,Readmitted
+179,76,F,27.2,115,191,99,Healthy,2024-02-23,6,Readmitted
+180,57,M,34.9,107,238,98,Heart Disease,2024-02-16,11,Referred
+181,64,M,19.7,103,295,118,Healthy,2024-08-02,11,Readmitted
+182,63,F,27.6,139,189,114,Heart Disease,2024-06-25,3,Readmitted
+183,25,M,34.5,103,221,162,Hypertension,2024-01-09,1,Referred
+184,35,F,27.1,155,188,99,Diabetes,2024-04-08,14,Readmitted
+185,81,M,28.9,124,253,85,Hypertension,2024-01-20,12,Referred
+186,74,F,30.0,102,163,109,Diabetes,2024-08-28,8,Referred
+187,47,F,26.0,131,181,88,Healthy,2024-03-01,12,Readmitted
+188,55,F,28.9,102,274,87,Hypertension,2024-06-26,13,Readmitted
+189,66,F,28.1,126,246,70,Heart Disease,2024-12-03,5,Recovered
+190,31,M,33.4,128,172,147,Diabetes,2024-03-02,5,Referred
+191,40,F,19.2,131,212,116,Diabetes,2024-05-24,11,Recovered
+192,84,F,23.1,149,292,135,Hypertension,2024-08-03,4,Readmitted
+193,26,F,34.2,157,294,161,Healthy,2024-01-03,6,Recovered
+194,25,M,33.2,150,202,163,Hypertension,2024-06-08,3,Referred
+195,72,F,26.0,118,253,107,Healthy,2024-08-14,9,Recovered
+196,36,M,28.7,120,253,120,Healthy,2024-09-25,5,Referred
+197,61,F,23.1,104,188,132,Diabetes,2024-04-29,3,Readmitted
+198,56,M,21.6,117,283,73,Hypertension,2024-03-29,11,Readmitted
+199,33,M,26.2,127,216,70,Hypertension,2024-11-24,1,Referred
+200,43,F,24.3,141,284,77,Healthy,2024-03-08,10,Readmitted
