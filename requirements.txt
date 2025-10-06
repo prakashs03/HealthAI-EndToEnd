@@ -2,11 +2,11 @@ streamlit
 pandas
 numpy
 plotly
+matplotlib
 scikit-learn
-tensorflow
-opencv-python-headless
 mlxtend
+tensorflow
 google-generativeai
 gtts
-pydub
 SpeechRecognition
+Pillow
