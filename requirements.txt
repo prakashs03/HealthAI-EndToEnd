@@ -1,18 +1,30 @@
-streamlit==1.39.0
-google-generativeai==0.7.2
-pandas>=1.5.0
-numpy>=1.24.0
-scikit-learn>=1.2.0
-plotly>=5.8.0
-matplotlib>=3.6.0
+# Core
+streamlit
+fastapi
+uvicorn
+
+# Data & ML
+pandas
+numpy
+scikit-learn
+tensorflow
+torch
 opencv-python-headless
-tensorflow-cpu>=2.12.0
-mlxtend>=0.21.0
-nltk>=3.8.1
-python-dateutil
-pillow
+matplotlib
+plotly
+mlxtend
+
+# NLP & Translation
+textblob
+nltk
+deep-translator
+google-generativeai
+
+# Audio (for chatbot voice)
 gtts
+speechrecognition
 pydub
-SpeechRecognition
-fastapi==0.95.2
-uvicorn==0.22.0
+
+# Utilities
+Pillow
+python-dotenv
