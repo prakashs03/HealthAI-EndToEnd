@@ -1,10 +1,13 @@
 __pycache__/
 *.pyc
 *.pkl
+*.h5
+*.ckpt
 .vscode/
 .env
-*.mp3
-tmp_*.mp3
-/data/images/train/*
-/data/images/test/*
+secrets.toml
+*.log
+/data/images/*
 /saved_models/*
+/models/*
+.DS_Store
