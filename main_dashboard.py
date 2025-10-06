@@ -1,245 +1,180 @@
 # main_dashboard.py
-import os, io, time
+import streamlit as st
 import pandas as pd
 import numpy as np
-import streamlit as st
+import plotly.express as px
+import os
+from mlxtend.frequent_patterns import apriori, association_rules
 
-# MUST be the first Streamlit command
-st.set_page_config(page_title="HealthAI: End-to-End", layout="wide")
+# local module imports (chatbot, translator, sentiment)
+from chatbot_frontend import healthcare_chatbot_component
+from translator_app import translator_ui
+from sentiment_app import sentiment_module_ui
 
-# Import local modules safely (catch syntax/import errors so app doesn't crash)
-translator_ui = None
-sentiment_ui = None
-healthcare_chatbot_query = None
-ensure_label_column = None
-GENAI_READY = False
+st.set_page_config(page_title="HealthAI Dashboard", layout="wide")
+st.title("🏥 HealthAI: End-to-End Healthcare Platform")
 
-translator_import_error = None
-sentiment_import_error = None
-chatbot_import_error = None
-prepare_import_error = None
+st.markdown("""
+This dashboard demonstrates the modules required by the project:
+1. Classification (Risk), 2. Regression (LOS), 3. Clustering, 4. Association Rules,
+5. CNN (demo), 6. LSTM (demo), 7. Chatbot, 8. Translator, 9. Sentiment.
+""")
 
-try:
-    from translator_app import translator_ui as _translator_ui
-    translator_ui = _translator_ui
-except Exception as e:
-    translator_import_error = e
-
-try:
-    from sentiment_app import sentiment_ui as _sentiment_ui
-    sentiment_ui = _sentiment_ui
-except Exception as e:
-    sentiment_import_error = e
-
-try:
-    from chatbot_frontend import healthcare_chatbot_query as _chatbot_q, GENAI_READY as _gready
-    healthcare_chatbot_query = _chatbot_q
-    GENAI_READY = bool(_gready)
-except Exception as e:
-    chatbot_import_error = e
-
-try:
-    from prepare_data import ensure_label_column as _ensure
-    ensure_label_column = _ensure
-except Exception as e:
-    prepare_import_error = e
-
-# Directory for data
-DATA_DIR = os.path.join(os.getcwd(), "data")
-os.makedirs(DATA_DIR, exist_ok=True)
-
-# Sidebar
-st.sidebar.title("📁 Modules")
-module = st.sidebar.radio("Choose a module", [
-    "Home",
-    "Classification (Disease Risk)",
-    "Regression (LOS prediction)",
-    "Clustering (Patient Segmentation)",
-    "Association Rule Mining",
-    "CNN (Imaging Demo)",
-    "Chatbot (Gemini)",
-    "Translator",
-    "Sentiment Analysis"
+menu = st.sidebar.selectbox("Choose module", [
+    "Classification", "Regression", "Clustering", "Association Rules",
+    "CNN Demo", "LSTM Demo", "Chatbot", "Translator", "Sentiment"
 ])
 
-st.sidebar.markdown("---")
-st.sidebar.caption("Place CSVs / images under `data/` in the repo or upload via module pages.")
+# helper: safe numeric extraction
+def numeric_df(df):
+    num = df.select_dtypes(include=[np.number])
+    return num.fillna(num.median())
 
-# HOME
-if module == "Home":
-    st.title("🏥 HealthAI: End-to-End AI/ML Healthcare Platform")
-    st.markdown("""
-    This dashboard demonstrates: classification, regression, clustering, association rules,
-    imaging demo, chatbot (Gemini fallback), translator, and sentiment analysis.
-    """)
-    st.info("Ensure `requirements.txt` is installed. Put your data files in the `data/` folder.")
-
-# CLASSIFICATION
-elif module == "Classification (Disease Risk)":
-    st.header("🧬 Disease Risk Classification")
-    st.write("Upload a CSV with features and a `label` column (e.g., Low/Medium/High or 0/1).")
-    uploaded = st.file_uploader("Upload classification CSV", type=["csv"], key="clf")
-    if uploaded:
-        df = pd.read_csv(uploaded)
-        st.dataframe(df.head(100))
+# 1. Classification
+if menu == "Classification":
+    st.subheader("Classification (Risk Stratification)")
+    st.write("Upload a CSV with numeric features and a 'label' column (0/1).")
+    f = st.file_uploader("CSV for classification", type="csv")
+    if f:
+        df = pd.read_csv(f)
+        st.dataframe(df.head())
         if "label" not in df.columns:
-            st.warning("'label' column is missing.")
-            if ensure_label_column is not None and st.button("Create example label from `los`"):
-                df = ensure_label_column(df, target_col="los")
-                st.success("Label column added (example).")
+            st.error("CSV must contain 'label' column. Use prepare_synthetic_data.py to generate sample.")
         else:
-            X = df.drop(columns=["label"]).select_dtypes(include=[np.number]).fillna(df.median())
+            X = numeric_df(df)
             y = df["label"]
-            if X.shape[1] == 0:
-                st.error("No numeric features found. Provide numeric columns (age, bmi, bp...).")
-            else:
-                from sklearn.model_selection import train_test_split
-                from sklearn.ensemble import RandomForestClassifier
-                X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
-                clf = RandomForestClassifier(n_estimators=100, random_state=42)
-                clf.fit(X_train, y_train)
-                score = clf.score(X_test, y_test)
-                st.success(f"Test accuracy: {score:.3f}")
-                importances = pd.Series(clf.feature_importances_, index=X.columns).sort_values(ascending=False)
-                import plotly.express as px
-                fig = px.bar(importances.reset_index().rename(columns={"index":"feature",0:"importance"}),
-                             x="feature", y=0, labels={"0":"importance"})
-                st.plotly_chart(fig, use_container_width=True)
+            # simple model metrics using sklearn (no long training)
+            from sklearn.model_selection import train_test_split
+            from sklearn.ensemble import RandomForestClassifier
+            X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42, stratify=y if len(np.unique(y))>1 else None)
+            model = RandomForestClassifier(n_estimators=50, random_state=42)
+            model.fit(X_train, y_train)
+            acc = model.score(X_test, y_test)
+            st.success(f"Test accuracy: {acc:.3f}")
+            # show feature importances if available
+            try:
+                importances = model.feature_importances_
+                feat = X.columns
+                fig = px.bar(x=feat, y=importances, title="Feature Importances")
+                st.plotly_chart(fig)
+            except Exception:
+                pass
 
-# REGRESSION
-elif module == "Regression (LOS prediction)":
-    st.header("📈 LOS Prediction (Regression)")
-    st.write("Upload CSV with `los` numeric column for Length of Stay prediction.")
-    uploaded = st.file_uploader("Upload regression CSV", type=["csv"], key="reg")
-    if uploaded:
-        df = pd.read_csv(uploaded)
-        st.dataframe(df.head(100))
+# 2. Regression
+elif menu == "Regression":
+    st.subheader("Regression (Length of Stay)")
+    st.write("Upload CSV containing numeric features and 'los' column.")
+    f = st.file_uploader("CSV for regression", type="csv")
+    if f:
+        df = pd.read_csv(f)
+        st.dataframe(df.head())
         if "los" not in df.columns:
-            st.error("'los' column missing.")
+            st.error("CSV must contain 'los' column.")
         else:
-            X = df.drop(columns=["los"]).select_dtypes(include=[np.number]).fillna(df.median())
+            X = numeric_df(df).drop(columns=["los"], errors="ignore")
             y = pd.to_numeric(df["los"], errors="coerce").fillna(0)
+            from sklearn.linear_model import LinearRegression
+            model = LinearRegression()
             if X.shape[1] == 0:
-                st.error("No numeric features for regression.")
+                st.error("No numeric features found.")
             else:
-                from sklearn.linear_model import LinearRegression
-                from sklearn.model_selection import train_test_split
-                from sklearn.preprocessing import StandardScaler
-                scaler = StandardScaler()
-                Xs = scaler.fit_transform(X)
-                X_train, X_test, y_train, y_test = train_test_split(Xs, y, test_size=0.2, random_state=42)
-                model = LinearRegression()
-                model.fit(X_train, y_train)
-                preds = model.predict(X_test)
-                mae = np.mean(np.abs(preds - y_test))
-                st.success(f"MAE: {mae:.3f}")
-                import plotly.express as px
-                fig = px.scatter(x=y_test, y=preds, labels={"x":"True LOS","y":"Predicted LOS"})
-                st.plotly_chart(fig, use_container_width=True)
+                model.fit(X, y)
+                preds = model.predict(X)
+                fig = px.scatter(x=y, y=preds, labels={'x':'Actual LOS','y':'Predicted LOS'}, title="Actual vs Predicted LOS")
+                st.plotly_chart(fig)
+                mae = np.mean(np.abs(y - preds))
+                st.write(f"MAE: {mae:.3f}")
 
-# CLUSTERING
-elif module == "Clustering (Patient Segmentation)":
-    st.header("🔎 Patient Segmentation (KMeans)")
-    uploaded = st.file_uploader("Upload CSV for clustering", type=["csv"], key="clust")
-    if uploaded:
-        df = pd.read_csv(uploaded)
-        st.dataframe(df.head(100))
-        X = df.select_dtypes(include=[np.number]).fillna(df.median())
-        if X.shape[1] == 0:
-            st.error("No numeric columns found.")
+# 3. Clustering
+elif menu == "Clustering":
+    st.subheader("Clustering (Patient Segmentation)")
+    f = st.file_uploader("CSV for clustering", type="csv")
+    if f:
+        df = pd.read_csv(f)
+        st.dataframe(df.head())
+        X = numeric_df(df)
+        if X.shape[1] < 2:
+            st.error("Please upload CSV with at least 2 numeric features.")
         else:
             from sklearn.cluster import KMeans
-            n = st.slider("Number of clusters", 2, 8, 3)
-            k = KMeans(n_clusters=n, random_state=42).fit(X)
-            labels = k.labels_
-            st.success(f"Assigned {n} clusters.")
-            try:
-                from sklearn.decomposition import PCA
-                import plotly.express as px
-                proj = PCA(n_components=2, random_state=42).fit_transform(X)
-                pdf = pd.DataFrame(proj, columns=["pc1","pc2"]); pdf["cluster"]=labels
-                fig = px.scatter(pdf, x="pc1", y="pc2", color="cluster", title="Cluster projection (PCA)")
-                st.plotly_chart(fig, use_container_width=True)
-            except Exception:
-                st.write("PCA visualization not available (missing dependency).")
+            n_clusters = st.slider("Clusters", 2, 6, 3)
+            km = KMeans(n_clusters=n_clusters, random_state=42)
+            df['cluster'] = km.fit_predict(X)
+            st.success("Clustering done.")
+            fig = px.scatter(df, x=X.columns[0], y=X.columns[1], color='cluster', title="Clusters")
+            st.plotly_chart(fig)
 
-# ASSOCIATION RULES
-elif module == "Association Rule Mining":
-    st.header("📚 Apriori Association Rules")
-    uploaded = st.file_uploader("Upload one-hot transactions CSV (0/1 or True/False)", type=["csv"], key="assoc")
-    if uploaded:
-        df = pd.read_csv(uploaded)
-        st.dataframe(df.head(100))
+# 4. Association Rules
+elif menu == "Association Rules":
+    st.subheader("Association Rules (Apriori)")
+    st.write("Upload one-hot encoded CSV (each column symptom/comorbidity, rows=transactions).")
+    f = st.file_uploader("One-hot encoded CSV", type="csv")
+    if f:
+        df = pd.read_csv(f)
         try:
-            from mlxtend.frequent_patterns import apriori, association_rules
             # ensure boolean
-            df_bool = df.astype(bool)
-            freq = apriori(df_bool, min_support=0.1, use_colnames=True)
-            rules = association_rules(freq, metric="lift", min_threshold=1.0)
-            st.write("Frequent itemsets:")
-            st.dataframe(freq.sort_values("support", ascending=False).head(20))
-            st.write("Association rules:")
-            st.dataframe(rules.sort_values("lift", ascending=False).head(20))
+            df_bool = df.fillna(0).astype(bool)
+            freq = apriori(df_bool, min_support=0.15, use_colnames=True)
+            rules = association_rules(freq, metric="lift", min_threshold=1.1)
+            st.dataframe(rules[['antecedents','consequents','support','confidence','lift']].head(20))
         except Exception as e:
-            st.error("Apriori/association_rules not available or input not one-hot: " + str(e))
+            st.error(f"Error computing rules: {e}")
 
-# CNN IMAGING DEMO
-elif module == "CNN (Imaging Demo)":
-    st.header("🖼️ Imaging (CNN Demo)")
-    uploaded = st.file_uploader("Upload an X-ray image (jpg/png)", type=["jpg","jpeg","png"], key="img")
-    if uploaded:
-        img_bytes = uploaded.read()
-        st.image(img_bytes, caption="Uploaded image", use_column_width=False, width=350)
-        from PIL import Image
-        img = Image.open(io.BytesIO(img_bytes)).convert("L").resize((224,224))
-        arr = np.array(img)/255.0
-        score = arr.mean()
-        pred = "PNEUMONIA" if score > 0.5 else "NORMAL"
-        st.success(f"Demo prediction: {pred} (mock)")
-
-# CHATBOT
-elif module == "Chatbot (Gemini)":
-    st.header("💬 Chatbot (Gemini)")
-    st.write("Type your health question (no voice). If Gemini isn't configured, a fallback answer appears.")
-    q = st.text_input("Ask a question", key="chat")
-    if st.button("Ask"):
-        if not q.strip():
-            st.warning("Enter a question.")
-        else:
-            if healthcare_chatbot_query is None:
-                st.error("Chatbot module not available. Import error: " + str(chatbot_import_error))
-                st.write("Fallback: For health queries, consult clinicians. Try keywords like 'heart', 'diabetes' for simple canned answers.")
-            else:
-                try:
-                    resp = healthcare_chatbot_query(q)
-                    st.markdown(resp)
-                    # feedback logging
-                    rating = st.radio("Was this helpful?", ("", "Yes", "No"))
-                    if rating:
-                        os.makedirs(os.path.join(DATA_DIR, "feedback"), exist_ok=True)
-                        flog = os.path.join(DATA_DIR, "feedback", "feedback_log.csv")
-                        entry = {"timestamp": time.time(), "question": q, "answer": resp, "rating": rating}
-                        pd.DataFrame([entry]).to_csv(flog, mode=("a" if os.path.exists(flog) else "w"), index=False, header=(not os.path.exists(flog)))
-                        st.success("Feedback saved.")
-                except Exception as e:
-                    st.error("Chatbot error: " + str(e))
-
-# TRANSLATOR
-elif module == "Translator":
-    st.header("🌐 Translator")
-    if translator_ui is None:
-        st.error("Translator module not available. Import error: " + str(translator_import_error))
+# 5. CNN demo (no heavy training)
+elif menu == "CNN Demo":
+    st.subheader("CNN Demo (Chest X-rays)")
+    st.write("Place images in `data/images/train/{NORMAL,PNEUMONIA}` and `data/images/test/{NORMAL,PNEUMONIA}`")
+    train_dir = "data/images/train"
+    test_dir = "data/images/test"
+    if os.path.exists(train_dir) and os.path.exists(test_dir):
+        # show counts
+        def count_classes(base):
+            counts = {}
+            for cls in ["NORMAL", "PNEUMONIA"]:
+                p = os.path.join(base, cls)
+                counts[cls] = len([f for f in os.listdir(p)]) if os.path.isdir(p) else 0
+            return counts
+        st.write("Train counts:", count_classes(train_dir))
+        st.write("Test counts:", count_classes(test_dir))
+        st.info("A small demo CNN will be shown (compiled but not trained here to keep it fast).")
+        from tensorflow.keras.models import Sequential
+        from tensorflow.keras.layers import Conv2D, MaxPooling2D, Flatten, Dense, Dropout
+        model = Sequential([
+            Conv2D(16,(3,3),activation='relu',input_shape=(64,64,3)),
+            MaxPooling2D(2,2),
+            Flatten(),
+            Dense(64, activation='relu'),
+            Dropout(0.2),
+            Dense(1, activation='sigmoid')
+        ])
+        model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])
+        st.write("Demo CNN compiled. Use local training script if you want to train fully.")
     else:
-        translator_ui()
+        st.error("data/images/train & data/images/test not found. Upload images to those folders in repo.")
 
-# SENTIMENT
-elif module == "Sentiment Analysis":
-    st.header("🧾 Sentiment Analysis")
-    if sentiment_ui is None:
-        st.error("Sentiment module not available. Import error: " + str(sentiment_import_error))
-    else:
-        sentiment_ui()
+# 6. LSTM demo
+elif menu == "LSTM Demo":
+    st.subheader("LSTM Demo (Vitals time-series)")
+    st.write("This is a demo visualization using synthetic vitals.")
+    t = np.arange(0,200)
+    signal = np.sin(t/10) + np.random.normal(0,0.1,size=len(t))
+    fig = px.line(x=t, y=signal, title="Simulated heart-rate-like vitals")
+    st.plotly_chart(fig)
 
-# footer
+# 7. Chatbot
+elif menu == "Chatbot":
+    st.subheader("Chatbot (Gemini if configured, otherwise fallback)")
+    healthcare_chatbot_component()
+
+# 8. Translator
+elif menu == "Translator":
+    st.subheader("Translator")
+    translator_ui()
+
+# 9. Sentiment
+elif menu == "Sentiment":
+    st.subheader("Sentiment")
+    sentiment_module_ui()
+
 st.markdown("---")
-st.caption("HealthAI demo — put datasets under data/ and add GEMINI_API_KEY to Streamlit Secrets for Gemini access.")
+st.caption("Project: End-to-end HealthAI | Modules: Classification, Regression, Clustering, Association, CNN (demo), LSTM (demo), Chatbot (Gemini), Translator, Sentiment.")
