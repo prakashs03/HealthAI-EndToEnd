@@ -1,64 +1,62 @@
 # chatbot_frontend.py
-import os
-from typing import Optional
+import streamlit as st
+import re
 
-GENAI_READY = False
+# try to import google.generativeai (Gemini) - optional
+try:
+    import google.generativeai as genai
+    GENAI_AVAILABLE = True
+except Exception:
+    GENAI_AVAILABLE = False
 
-# We do NOT run any Streamlit commands at import-time to avoid page-config errors.
-
-def _try_call_gemini(question: str, api_key: str, model: str="models/gemini-2.5-pro") -> Optional[str]:
-    """
-    Try to invoke Google Generative API if package present and key provided.
-    Returns text or raises an exception.
-    """
+def _genai_response(question: str) -> str:
+    """Return response using Gemini if available and key present; otherwise fallback."""
+    # If secrets has GEMINI_API_KEY and library is present, call it.
     try:
-        import google.generativeai as genai  # optional package
+        if GENAI_AVAILABLE and "GEMINI_API_KEY" in st.secrets:
+            genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
+            model = "models/gemini-2.5-flash"  # a supported model on the user's list
+            resp = genai.generate_text(model=model, text=question)
+            # new genai clients may differ; attempt multiple attributes
+            text = ""
+            if hasattr(resp, "text"):
+                text = resp.text
+            elif isinstance(resp, dict) and "candidates" in resp:
+                text = resp["candidates"][0].get("content", "")
+            else:
+                text = str(resp)
+            return text.strip()
     except Exception as e:
-        raise RuntimeError("google.generativeai not installed.") from e
+        # fallback below
+        pass
 
-    if not api_key:
-        raise RuntimeError("No API key provided for Gemini.")
+    # Fallback simple answer: take keywords and answer concisely
+    q = question.lower()
+    if "heart" in q or "chest" in q or "heart disease" in q:
+        return "Early signs: chest discomfort, breathlessness, unusual fatigue — consult a doctor if present."
+    if "diabetes" in q:
+        return "Common signs: frequent urination, thirst, fatigue, unexplained weight loss; see provider for tests."
+    if re.search(r'[\u0B80-\u0BFF]', question):  # Tamil unicode detection
+        # short Tamil fallback
+        return "முன் அறிகுறிகள்: மார்பு வலி, மூச்சுத் திணறல் மற்றும் சோர்வு — மருத்துவரை சந்திக்கவும்."
+    return "I don't have internet access here; please ask a simple medical question or enable Gemini API."
 
-    genai.configure(api_key=api_key)
-    # Note: depending on your installed genai library, method names differ.
-    # We attempt a simple call; adapt this call to your library version if necessary.
-    try:
-        # newer libs may provide genai.generate_text or genai.generate
-        if hasattr(genai, "generate_text"):
-            resp = genai.generate_text(model=model, prompt=question, max_output_tokens=512)
-            return getattr(resp, "text", str(resp))
-        elif hasattr(genai, "generate"):
-            resp = genai.generate(model=model, input=question)
-            # The return shape can differ; try to extract text
-            if hasattr(resp, "candidates"):
-                return resp.candidates[0].content
-            return str(resp)
+def healthcare_chatbot_component():
+    st.subheader("💬 Healthcare Chatbot")
+    st.write("Type a question below (the model will reply concisely). If you want more detail, add `Please explain more.`")
+    user_q = st.text_input("Ask a health question (text):")
+    if st.button("Get Answer"):
+        if not user_q.strip():
+            st.warning("Please enter a question.")
         else:
-            raise RuntimeError("Unsupported genai client version.")
-    except Exception as e:
-        raise RuntimeError("Gemini call failed: " + str(e)) from e
-
-def healthcare_chatbot_query(question: str) -> str:
-    """
-    Public function called by Streamlit main app.
-    Attempts Gemini if API key set in environment variable GEMINI_API_KEY,
-    otherwise returns a friendly fallback answer.
-    """
-    key = os.environ.get("GEMINI_API_KEY") or os.getenv("GEMINI_API_KEY")
-    if not key:
-        # No API key -> fallback canned answers
-        q = question.lower()
-        if "heart" in q:
-            return ("**Brief:** Chest pain/pressure, shortness of breath, fatigue, dizziness can be early signs of heart disease. "
-                    "If severe or sudden, seek emergency care. Ask 'explain more' for details.")
-        if "diabetes" in q:
-            return ("**Brief:** Frequent urination, increased thirst, unexplained weight loss, tiredness. "
-                    "Consult a doctor for testing.")
-        return ("**Brief:** I can provide general health info. For personal medical advice, see a clinician. "
-                "Ask 'explain more' to get a longer description.")
-    # If key present, try gemini
-    try:
-        text = _try_call_gemini(question, key)
-        return text
-    except Exception as e:
-        return f"❗ Gemini unavailable: {e}\n\nFallback (brief): For medical concerns, consult a health professional."
+            with st.spinner("Getting answer..."):
+                answer = _genai_response(user_q)
+            # default behavior: concise one- or two-line answer. If user appended 'explain', return longer.
+            if "explain" in user_q.lower() or "detail" in user_q.lower():
+                st.info(answer)
+            else:
+                # Show concise: first sentence only
+                concise = answer.split(".")[0]
+                if concise.strip() == "":
+                    concise = answer
+                st.success(concise.strip())
