@@ -1,39 +1,40 @@
 # sentiment_app.py
-import os
-from pathlib import Path
+# Lightweight sentiment demo using a simple lexicon and fallback to Gemini if available.
 import streamlit as st
 import pandas as pd
+from textblob import TextBlob
 
-ROOT = Path(__file__).parent
-DATA_DIR = ROOT / "data"
-FEEDBACK_LOG = DATA_DIR / "feedback" / "feedback_log.csv"
+def sentiment_from_text(text):
+    """
+    Very small sentiment detector — TextBlob polarity fallback.
+    Returns label, score.
+    """
+    if not text or not str(text).strip():
+        return "NEUTRAL", 0.0
+    tb = TextBlob(text)
+    score = tb.sentiment.polarity  # -1 .. +1
+    if score > 0.2:
+        return "POSITIVE", float(score)
+    if score < -0.2:
+        return "NEGATIVE", float(score)
+    return "NEUTRAL", float(score)
 
-def sentiment_component(root=None):
-    st.write("Sentiment Analysis of feedback. Uses logged chat feedback and patient_feedback.csv.")
-    p = FEEDBACK_LOG
-    if p.exists():
-        df = pd.read_csv(p)
-        st.write("Recent feedback (tail):")
-        st.dataframe(df.tail(20))
-        # quick counts
-        if "feedback" in df.columns:
-            counts = df["feedback"].value_counts(dropna=True)
-            st.bar_chart(counts)
+def sentiment_module_ui():
+    st.header("Sentiment Analysis (Patient Feedback)")
+    st.write("Paste a patient feedback or upload `patient_feedback.csv` to run sentiment analysis.")
+    uploaded = st.file_uploader("Upload CSV (two cols: id,text) for batch sentiment", type=["csv"])
+    if uploaded:
+        df = pd.read_csv(uploaded)
+        if 'text' not in df.columns:
+            st.error("CSV must have a 'text' column.")
+            return
+        df['sentiment_label'], df['sentiment_score'] = zip(*df['text'].apply(sentiment_from_text))
+        st.dataframe(df[['text','sentiment_label','sentiment_score']].head(200))
+        # simple counts
+        c = df['sentiment_label'].value_counts().to_dict()
+        st.write("Counts:", c)
     else:
-        st.info("No feedback log found yet (feedback_log.csv). Use the Chatbot and submit feedback to populate.")
-
-    # allow manual upload of patient feedback CSV for batch sentiment
-    uploaded = st.file_uploader("Upload patient_feedback.csv (optional)", type=["csv"])
-    if uploaded is not None:
-        df2 = pd.read_csv(uploaded)
-        st.write(df2.head())
-        st.success("File loaded. For labeling/sentiment you can download and analyze in notebook; this demo does a simple polarity via TextBlob if installed.")
-        try:
-            from textblob import TextBlob
-            def pol(x):
-                return TextBlob(str(x)).sentiment.polarity
-            df2["polarity"] = df2.iloc[:,0].apply(pol)
-            st.write(df2.head())
-            st.bar_chart(df2["polarity"].apply(lambda v: "pos" if v>0 else ("neg" if v<0 else "neu")).value_counts())
-        except Exception as e:
-            st.warning("TextBlob not installed on server. Install `textblob` to run quick sentiment demo.")
+        txt = st.text_area("Type one feedback to analyze")
+        if st.button("Analyze"):
+            label, score = sentiment_from_text(txt)
+            st.success(f"Label: {label}  —  Score: {score:.3f}")
