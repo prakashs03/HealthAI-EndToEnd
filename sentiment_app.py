@@ -1,34 +1,33 @@
 # sentiment_app.py
-import streamlit as st
-import os
-import time
-import pandas as pd
-
 def sentiment_ui():
-    st.markdown("Sentiment Analysis on patient feedback (TextBlob quick demo).")
-    uploaded = st.file_uploader("Upload feedback CSV (one column 'text')", type=["csv"], key="sentiment")
-    text_input = st.text_area("Or paste feedback text here")
-    if uploaded is not None:
-        df = pd.read_csv(uploaded)
-        st.dataframe(df.head(100))
-        texts = df.iloc[:,0].astype(str).tolist()
-    else:
-        texts = [text_input] if text_input.strip() else []
-    if st.button("Analyze Sentiment"):
+    import streamlit as st
+    import pandas as pd
+    st.write("Sentiment analysis (TextBlob). Upload CSV with one column or paste text.")
+    uploaded = st.file_uploader("Upload CSV (one column of text)", type=["csv"], key="sent")
+    text_area = st.text_area("Or paste text to analyze")
+    texts = []
+    if uploaded:
+        try:
+            df = pd.read_csv(uploaded)
+            first_col = df.columns[0]
+            texts = df[first_col].astype(str).tolist()
+            st.dataframe(df.head(10))
+        except Exception as e:
+            st.error("Failed to read CSV: " + str(e))
+            return
+    elif text_area.strip():
+        texts = [text_area.strip()]
+    if st.button("Analyze"):
         if not texts:
-            st.warning("Provide input text or upload CSV.")
+            st.warning("Provide text input or CSV.")
             return
         try:
             from textblob import TextBlob
             results = []
             for t in texts:
                 tb = TextBlob(t)
-                pol = tb.sentiment.polarity
-                subj = tb.sentiment.subjectivity
-                results.append({"text": t, "polarity": pol, "subjectivity": subj})
-            rdf = pd.DataFrame(results)
-            st.dataframe(rdf)
-            st.success("Sentiment computed.")
+                results.append({"text": t, "polarity": tb.sentiment.polarity, "subjectivity": tb.sentiment.subjectivity})
+            st.dataframe(pd.DataFrame(results))
         except Exception as e:
-            st.error("TextBlob not available. Install via requirements or fallback.")
-            st.write("Fallback: unable to compute sentiment here.")
+            st.error("TextBlob not available. Install via requirements.")
+            st.write("Fallback: Could not compute sentiment.")
