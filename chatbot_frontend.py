@@ -1,94 +1,104 @@
-# chatbot_frontend.py
-# Chatbot helper: calls Google Gemini if available, otherwise uses a simple fallback.
 import streamlit as st
-import re
-import time
+import google.generativeai as genai
+import os
+import csv
+import datetime
+from gtts import gTTS
+from io import BytesIO
+import speech_recognition as sr
+from pydub import AudioSegment
 
-# Try to import the official Google generative ai client
+# ----------------------------------------------------------
+# ✅ STEP 1: Configure Gemini API
+# ----------------------------------------------------------
 try:
-    import google.generativeai as genai
-    GENAI_AVAILABLE = True
-except Exception:
-    GENAI_AVAILABLE = False
+        api_key = st.secrets["GEMINI_API_KEY"]
+        genai.configure(api_key=api_key)
+        gemini_model = genai.GenerativeModel("gemini-pro")
+except Exception as e:
+        gemini_model = None
+        st.warning("⚠️ Gemini API key missing! Add GEMINI_API_KEY in Streamlit secrets.")
 
-def ensure_genai():
-    if not GENAI_AVAILABLE:
-        return False
-    if "GEMINI_API_KEY" not in st.secrets:
-        return False
-    try:
-        genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
-        return True
-    except Exception:
-        return False
 
-GENAI_READY = ensure_genai()
+# ----------------------------------------------------------
+# ✅ STEP 2: Chatbot Function
+# ----------------------------------------------------------
+def healthcare_chatbot_component():
+        st.markdown("## 🤖 Healthcare Chatbot")
+        st.markdown("Ask any health-related question. You can either type or use your voice 🎙️")
 
-def query_gemini(prompt, model="models/gemini-2.5-pro", max_output_tokens=300, temperature=0.2):
-    """
-    Call Gemini (if available). Returns text or raises exception.
-    """
-    if not GENAI_READY:
-        raise RuntimeError("Gemini not configured/available")
+    if "chat_history" not in st.session_state:
+                st.session_state.chat_history = []
 
-    # The official API may vary; this is the standard client usage.
-    try:
-        # `generate` returns a response object. The API may differ by version.
-        resp = genai.generate(model=model, temperature=temperature, max_output_tokens=max_output_tokens, input=prompt)
-        # response.text or resp.candidates[0].output? different versions exist.
-        # Try common response fields:
-        if hasattr(resp, "text"):
-            return resp.text
-        if hasattr(resp, "candidates"):
-            return resp.candidates[0].output
-        # new versions may use resp.output[0].content[0].text
-        # Fallback to string repr
-        return str(resp)
-    except Exception as e:
-        raise
+    # Text input
+    user_input = st.text_area("💬 Type your question:", placeholder="Example: What are the early symptoms of diabetes?")
 
-def simple_fallback_answer(prompt):
-    """
-    Very small rule-based fallback if Gemini is not usable.
-    Keep it short (one-two lines) — per your UI brief.
-    """
-    prompt_low = prompt.lower()
-    if "heart" in prompt_low or "chest" in prompt_low or "cardio" in prompt_low:
-        return "Early signs: chest discomfort, shortness of breath, unexplained fatigue. See a provider for diagnosis."
-    if "diabetes" in prompt_low or "blood sugar" in prompt_low:
-        return "Common signs: increased thirst, frequent urination, unexplained weight loss. Get a blood test for confirmation."
-    if "exercise" in prompt_low or "exercise for heart" in prompt_low:
-        return "Moderate aerobic exercise like brisk walking is excellent; aim for 150 mins/week. Check with your doctor first."
-    # default
-    return "I can help summarize clinical topics briefly. Please ask a specific question (e.g., 'early signs of heart disease')."
+    # Voice input
+    if st.button("🎙️ Speak your question"):
+                recognizer = sr.Recognizer()
+                try:
+                                with sr.Microphone() as source:
+                                                    st.info("Listening... Please speak clearly.")
+                                                    audio_data = recognizer.listen(source, timeout=8, phrase_time_limit=10)
+                                                    user_input = recognizer.recognize_google(audio_data)
+                                                    st.success(f"🎧 You said: {user_input}")
+                except Exception as e:
+                                st.error("❌ Voice input failed. Please check your microphone permissions.")
 
-def healthcare_chatbot_query(query_text, short_answer=True):
-    """
-    Central function used by the dashboard.
-    short_answer True => produce a short 1-2 line answer.
-    If Gemini is available, call it and request short answer. Otherwise fallback.
-    """
-    # Detect Tamil (approx)
-    is_tamil = bool(re.search(r'[\u0B80-\u0BFF]', str(query_text)))
+            # If user asks a question
+            if st.button("🩺 Get Health Advice"):
+                        if not user_input.strip():
+                                        st.warning("⚠️ Please type or speak a question.")
+                                        return
 
-    if GENAI_READY:
-        # ask for short or long form
-        form = "short" if short_answer else "detailed"
-        prompt = f"Provide a {form} clinically-correct, respectfully worded answer to the user question. If the user asked in Tamil, reply in Tamil. Question:\n\n{query_text}\n\nAnswer:"
-        try:
-            text = query_gemini(prompt, max_output_tokens=300, temperature=0.2)
-            # Clean text
-            return text.strip()
-        except Exception:
-            # fallback to simple
-            return simple_fallback_answer(query_text)
-    else:
-        # no Gemini -> simple fallback
-        ans = simple_fallback_answer(query_text)
-        # If Tamil requested, return in English-only fallback (or very short Tamil phrase)
-        if is_tamil:
-            # short translation via tiny maps (just a couple of phrases)
-            if "heart" in query_text.lower():
-                return "முதலுக்கு: மார்புவலி, மூச்சுத்திணறல், சோர்வு. மருத்துவரை அணுகவும்."
-            return ans
-        return ans
+                        # Send to Gemini
+                        if gemini_model:
+                                        with st.spinner("🤖 Thinking..."):
+                                                            prompt = (
+                                                                                    f"You are a multilingual medical assistant chatbot. "
+                                                                                    f"Provide a short, clear, and medically accurate response. "
+                                                                                    f"If the user asks for more details, expand the explanation.\n"
+                                                                                    f"User question: {user_input}"
+                                                            )
+                                                            try:
+                                                                                    response = gemini_model.generate_content(prompt)
+                                                                                    bot_reply = response.text.strip()
+
+                                                                st.markdown("### 🧠 Gemini's Response:")
+                                                                st.write(bot_reply)
+
+                                                # Convert to speech
+                                                                tts = gTTS(bot_reply)
+                                                                audio_bytes = BytesIO()
+                                                                tts.write_to_fp(audio_bytes)
+                                                                st.audio(audio_bytes.getvalue(), format="audio/mp3")
+
+                                                # Save chat log
+                                                                save_chat_to_csv(user_input, bot_reply)
+
+                                                st.session_state.chat_history.append(("You", user_input))
+                                                st.session_state.chat_history.append(("Bot", bot_reply))
+
+except Exception as e:
+                    st.error(f"⚠️ Error generating response: {str(e)}")
+else:
+            st.error("❌ Gemini API not initialized.")
+
+
+# ----------------------------------------------------------
+# ✅ STEP 3: Chat Logger
+# ----------------------------------------------------------
+def save_chat_to_csv(user_text, bot_reply):
+        os.makedirs("feedback", exist_ok=True)
+        log_path = "feedback/feedback_log.csv"
+        with open(log_path, "a", newline="", encoding="utf-8") as f:
+                    writer = csv.writer(f)
+                    writer.writerow([datetime.datetime.now(), user_text, bot_reply])
+
+
+# ----------------------------------------------------------
+# ✅ STEP 4: Run as Standalone
+# ----------------------------------------------------------
+if __name__ == "__main__":
+        st.set_page_config(page_title="HealthAI Chatbot", page_icon="🤖")
+        healthcare_chatbot_component()
