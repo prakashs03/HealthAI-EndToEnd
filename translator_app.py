@@ -1,72 +1,48 @@
+# translator_app.py
 import streamlit as st
-from deep_translator import GoogleTranslator
-import re
+import os
+from pathlib import Path
 
-# ===============================================================
-# PAGE CONFIG
-# ===============================================================
-st.set_page_config(
-    page_title="🌐 Healthcare Translator (English ↔ தமிழ்)",
-    page_icon="🌍",
-    layout="centered"
-)
+try:
+    from deep_translator import GoogleTranslator
+    DEEP_AVAILABLE = True
+except Exception:
+    DEEP_AVAILABLE = False
 
-st.markdown(
-    """
-    <h2 style='text-align:center;color:#007BFF;'>🌐 Healthcare Translator (English ↔ தமிழ்)</h2>
-    <p style='text-align:center;'>Bridge the language gap between doctors and patients</p>
-    <hr>
-    """,
-    unsafe_allow_html=True
-)
+# Gemini availability check — same approach as chatbot file
+GEMINI_KEY = os.environ.get("GEMINI_API_KEY")
+try:
+    import google.generativeai as genai
+    if GEMINI_KEY:
+        genai.configure(api_key=GEMINI_KEY)
+        GEMINI_AVAILABLE = True
+    else:
+        GEMINI_AVAILABLE = False
+except Exception:
+    GEMINI_AVAILABLE = False
 
-# ===============================================================
-# HELPER FUNCTION
-# ===============================================================
-def detect_language(text):
-    """Detects if text is Tamil or English."""
-    if bool(re.search(r'[\u0B80-\u0BFF]', text)):
-        return "ta"
-    return "en"
-
-
-def translate_text(text):
-    """Translates between Tamil and English automatically."""
-    if not text.strip():
-        return "⚠️ Please enter text to translate."
-
-    lang = detect_language(text)
-
-    try:
-        if lang == "en":
-            translated = GoogleTranslator(source="en", target="ta").translate(text)
-            direction = "English → Tamil"
+def translator_component(root=None):
+    st.write("Translator (English <-> Tamil). Use Gemini if API key set for higher-quality translation.")
+    col1, col2 = st.columns([3,1])
+    with col1:
+        text = st.text_area("Enter text to translate", value="")
+        direction = st.radio("Direction", ("EN -> TA", "TA -> EN"))
+    if st.button("Translate"):
+        if GEMINI_AVAILABLE:
+            # simple wrapper prompt - for short translations
+            prompt = f"Translate the following text to Tamil:\n\n{text}" if direction=="EN -> TA" else f"Translate the following text to English:\n\n{text}"
+            try:
+                resp = genai.generate_text(model="models/gemini-2.5-pro", prompt=prompt, max_output_tokens=200)
+                st.success(resp.text)
+            except Exception as e:
+                st.error(f"Gemini error: {e}")
         else:
-            translated = GoogleTranslator(source="ta", target="en").translate(text)
-            direction = "Tamil → English"
-        return f"**{direction}:**\n\n{translated}"
-
-    except Exception as e:
-        return f"⚠️ Error: {str(e)}"
-
-
-# ===============================================================
-# UI
-# ===============================================================
-st.subheader("📝 Enter text below to translate:")
-user_text = st.text_area("Input text:", height=150, placeholder="Type here in English or Tamil...")
-
-if st.button("🔄 Translate"):
-    with st.spinner("Translating... please wait..."):
-        output = translate_text(user_text)
-        st.markdown(output)
-
-st.markdown(
-    """
-    <hr>
-    <div style='text-align:center;color:gray;'>
-        <b>Powered by Deep Translator | Healthcare AI Project</b>
-    </div>
-    """,
-    unsafe_allow_html=True
-)
+            if DEEP_AVAILABLE:
+                tgt = "tamil" if direction=="EN -> TA" else "english"
+                try:
+                    translated = GoogleTranslator(source='auto', target=tgt).translate(text)
+                    st.success(translated)
+                except Exception as e:
+                    st.error(f"Translation error: {e}")
+            else:
+                st.warning("No translation engine available. Install deep_translator or provide GEMINI_API_KEY in secrets.")
