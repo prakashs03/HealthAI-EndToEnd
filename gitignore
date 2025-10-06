@@ -1,13 +1,9 @@
 __pycache__/
 *.pyc
-*.pkl
-*.h5
-*.ckpt
-.vscode/
+data/*.csv
+data/images/*
+saved_models/
 .env
 secrets.toml
-*.log
-/data/images/*
-/saved_models/*
-/models/*
+.vscode/
 .DS_Store
