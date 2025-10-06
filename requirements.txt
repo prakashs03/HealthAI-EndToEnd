@@ -1,11 +1,18 @@
-streamlit>=1.18
-pandas>=1.5
-numpy>=1.23
-scikit-learn>=1.2
-plotly>=5.0
-mlxtend>=0.21.0
-deep-translator>=1.8.1
-textblob>=0.17.1
-google-generative-ai>=0.3.0    # optional: for Gemini (install only if available in environment)
-# If using image processing / demo CNN:
-Pillow>=9.0
+# === CORE DEPENDENCIES ===
+streamlit>=1.32
+pandas
+numpy
+scikit-learn
+plotly
+mlxtend
+Pillow
+
+# === NLP & TRANSLATION ===
+deep-translator
+textblob
+
+# === GEMINI (Chatbot Integration) ===
+google-generativeai
+
+# === OPTIONAL / SAFETY ===
+protobuf>=3.20
