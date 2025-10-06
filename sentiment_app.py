@@ -1,80 +1,39 @@
+# sentiment_app.py
+import os
+from pathlib import Path
 import streamlit as st
-import google.generativeai as genai
-from deep_translator import GoogleTranslator
-import re
+import pandas as pd
 
-# ---------------------------
-# 🌟 CONFIGURATION
-# ---------------------------
-API_KEY = "AIzaSyCs-iW346inNJ0Pmc-PidcM2L4NOH9C7o4"  # your Gemini API key
-genai.configure(api_key=API_KEY)
+ROOT = Path(__file__).parent
+DATA_DIR = ROOT / "data"
+FEEDBACK_LOG = DATA_DIR / "feedback" / "feedback_log.csv"
 
-# ---------------------------
-# ⚙️ Initialize Model
-# ---------------------------
-model = genai.GenerativeModel("models/gemini-2.5-pro")
-
-# ---------------------------
-# 🧠 Sentiment Function
-# ---------------------------
-def analyze_sentiment(text):
-    # Detect Tamil text
-    is_tamil = bool(re.search(r'[\u0B80-\u0BFF]', str(text)))
-    
-    # Translate Tamil to English for analysis
-    if is_tamil:
-        translated_text = GoogleTranslator(source='ta', target='en').translate(text)
+def sentiment_component(root=None):
+    st.write("Sentiment Analysis of feedback. Uses logged chat feedback and patient_feedback.csv.")
+    p = FEEDBACK_LOG
+    if p.exists():
+        df = pd.read_csv(p)
+        st.write("Recent feedback (tail):")
+        st.dataframe(df.tail(20))
+        # quick counts
+        if "feedback" in df.columns:
+            counts = df["feedback"].value_counts(dropna=True)
+            st.bar_chart(counts)
     else:
-        translated_text = text
+        st.info("No feedback log found yet (feedback_log.csv). Use the Chatbot and submit feedback to populate.")
 
-    # Ask Gemini for sentiment
-    prompt = f"Classify the sentiment of this text as Positive, Negative, or Neutral: '{translated_text}'. Give a one-line reason."
-    
-    try:
-        response = model.generate_content(prompt)
-        result = response.text.strip()
-    except Exception as e:
-        result = f"⚠️ Error: {str(e)}"
-        return result
-
-    # Translate back if input was Tamil
-    if is_tamil:
-        translated_back = GoogleTranslator(source='en', target='ta').translate(result)
-        return translated_back
-    else:
-        return result
-
-# ---------------------------
-# 🎨 Streamlit UI
-# ---------------------------
-st.set_page_config(page_title="Healthcare Sentiment Analyzer", page_icon="❤️", layout="centered")
-
-st.title("🧠 Healthcare Sentiment Analyzer")
-st.write("Analyze patient feedback or clinical text sentiment in **English or Tamil**.")
-
-st.markdown("---")
-
-# Input text box
-text_input = st.text_area("📝 Enter feedback or statement here:", height=150)
-
-if st.button("🔍 Analyze Sentiment"):
-    if not text_input.strip():
-        st.warning("⚠️ Please enter some text to analyze.")
-    else:
-        with st.spinner("Analyzing sentiment... please wait ⏳"):
-            sentiment = analyze_sentiment(text_input)
-
-        # Display output
-        st.markdown("### 🧾 Result:")
-        st.success(sentiment)
-
-        # Visual indicator
-        if any(word.lower() in sentiment.lower() for word in ["positive", "நல்ல", "சிறந்த", "மகிழ்ச்சி"]):
-            st.markdown("🟢 **Sentiment: Positive** 😊")
-        elif any(word.lower() in sentiment.lower() for word in ["negative", "மோசமான", "தவறான", "துக்கம்"]):
-            st.markdown("🔴 **Sentiment: Negative** 😔")
-        else:
-            st.markdown("🟡 **Sentiment: Neutral** 😐")
-
-st.markdown("---")
-st.caption("© 2025 Healthcare AI Project | Built with ❤️ using Google Gemini + Streamlit")
+    # allow manual upload of patient feedback CSV for batch sentiment
+    uploaded = st.file_uploader("Upload patient_feedback.csv (optional)", type=["csv"])
+    if uploaded is not None:
+        df2 = pd.read_csv(uploaded)
+        st.write(df2.head())
+        st.success("File loaded. For labeling/sentiment you can download and analyze in notebook; this demo does a simple polarity via TextBlob if installed.")
+        try:
+            from textblob import TextBlob
+            def pol(x):
+                return TextBlob(str(x)).sentiment.polarity
+            df2["polarity"] = df2.iloc[:,0].apply(pol)
+            st.write(df2.head())
+            st.bar_chart(df2["polarity"].apply(lambda v: "pos" if v>0 else ("neg" if v<0 else "neu")).value_counts())
+        except Exception as e:
+            st.warning("TextBlob not installed on server. Install `textblob` to run quick sentiment demo.")
