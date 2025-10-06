@@ -8,54 +8,52 @@ from sklearn.cluster import KMeans
 from sklearn.metrics import silhouette_score, accuracy_score, mean_squared_error
 from mlxtend.frequent_patterns import apriori, association_rules
 import tensorflow as tf
-from tensorflow.keras.preprocessing.image import ImageDataGenerator
 from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import Conv2D, MaxPooling2D, Flatten, Dense, Dropout, LSTM
-from tensorflow.keras.preprocessing import image
-import cv2, os
+from tensorflow.keras.layers import Conv2D, MaxPooling2D, Flatten, Dense
 from PIL import Image
-import tempfile
-from gtts import gTTS
-import base64
-import plotly.graph_objects as go
-from io import BytesIO
+import numpy as np
 
-# ✅ Import chatbot module (updated)
+# ✅ Import chatbot component
 from chatbot_frontend import healthcare_chatbot_component
 
-# ✅ Streamlit config
+# ----------------------------
+# Streamlit Configuration
+# ----------------------------
 st.set_page_config(
-    page_title="HealthAI: End-to-End Healthcare AI System",
+    page_title="HealthAI Dashboard",
     layout="wide",
     page_icon="💊"
 )
 
-# ✅ Header
 st.title("🏥 HealthAI: End-to-End AI/ML Healthcare Platform")
 st.markdown("""
 Welcome to the **HealthAI Dashboard**, your all-in-one intelligent system for medical analytics.  
 Powered by **Gemini AI + Streamlit + TensorFlow + scikit-learn**.
 """)
 
-# Sidebar Navigation
+# Sidebar
 st.sidebar.header("📂 Modules")
-module = st.sidebar.radio("Choose a module", [
-    "🏠 Home",
-    "📈 Regression (Outcome Prediction)",
-    "🧬 Classification (Disease Risk)",
-    "🔬 Clustering (Patient Segmentation)",
-    "📚 Association Rule Mining",
-    "🩻 CNN (Imaging Diagnostics)",
-    "📊 LSTM (Time Series)",
-    "💬 Chatbot (Gemini)",
-])
+module = st.sidebar.radio(
+    "Choose a module",
+    [
+        "🏠 Home",
+        "📈 Regression (Outcome Prediction)",
+        "🧬 Classification (Disease Risk)",
+        "🔬 Clustering (Patient Segmentation)",
+        "📚 Association Rule Mining",
+        "🩻 CNN (Imaging Diagnostics)",
+        "📊 LSTM (Time Series)",
+        "💬 Chatbot (Gemini)",
+    ],
+)
 
-# =========================
-# 🏠 HOME
-# =========================
+# ----------------------------
+# Modules
+# ----------------------------
+
 if module == "🏠 Home":
     st.image("assets/icon_chatbot.png", width=200)
-    st.success("✅ All modules ready. Choose one from the left sidebar.")
+    st.success("✅ All modules are ready. Choose one from the sidebar.")
 
 # =========================
 # 📈 REGRESSION
@@ -63,24 +61,25 @@ if module == "🏠 Home":
 elif module == "📈 Regression (Outcome Prediction)":
     st.header("📈 Predict Length of Stay (Regression Model)")
 
-    uploaded_file = st.file_uploader("Upload regression CSV with `los` column", type=["csv"])
-    if uploaded_file:
-        df = pd.read_csv(uploaded_file)
+    file = st.file_uploader("Upload regression CSV with `los` column", type=["csv"])
+    if file:
+        df = pd.read_csv(file)
         st.write(df.head())
 
-        numeric_df = df.select_dtypes(include=[np.number])
-        if 'los' not in numeric_df.columns:
-            st.error("⚠️ Missing 'los' column for prediction!")
+        if "los" not in df.columns:
+            st.error("⚠️ Missing 'los' column!")
         else:
-            X = numeric_df.drop('los', axis=1)
-            y = numeric_df['los']
+            X = df.select_dtypes(include=[np.number]).drop(columns=["los"])
+            y = df["los"]
 
             model = LinearRegression()
             model.fit(X, y)
             preds = model.predict(X)
 
-            st.success(f"✅ Model trained successfully! RMSE: {np.sqrt(mean_squared_error(y, preds)):.2f}")
-            fig = px.scatter(x=y, y=preds, labels={'x': 'Actual', 'y': 'Predicted'}, title="Actual vs Predicted LOS")
+            rmse = np.sqrt(mean_squared_error(y, preds))
+            st.success(f"✅ Model trained. RMSE: {rmse:.2f}")
+
+            fig = px.scatter(x=y, y=preds, labels={"x": "Actual", "y": "Predicted"})
             st.plotly_chart(fig, use_container_width=True)
 
 # =========================
@@ -89,23 +88,23 @@ elif module == "📈 Regression (Outcome Prediction)":
 elif module == "🧬 Classification (Disease Risk)":
     st.header("🧬 Disease Risk Classification")
 
-    uploaded_file = st.file_uploader("Upload classification CSV (with 'label' column)", type=["csv"])
-    if uploaded_file:
-        df = pd.read_csv(uploaded_file)
+    file = st.file_uploader("Upload classification CSV (with 'label' column)", type=["csv"])
+    if file:
+        df = pd.read_csv(file)
         st.write(df.head())
 
-        if 'label' not in df.columns:
+        if "label" not in df.columns:
             st.error("⚠️ 'label' column missing!")
         else:
-            X = df.drop('label', axis=1).select_dtypes(include=[np.number])
-            y = df['label']
+            X = df.select_dtypes(include=[np.number]).drop(columns=["label"])
+            y = df["label"]
 
             model = LogisticRegression(max_iter=200)
             model.fit(X, y)
             preds = model.predict(X)
             acc = accuracy_score(y, preds)
 
-            st.success(f"✅ Model Accuracy: {acc*100:.2f}%")
+            st.success(f"✅ Accuracy: {acc*100:.2f}%")
             st.plotly_chart(px.histogram(x=preds, title="Predicted Class Distribution"))
 
 # =========================
@@ -114,80 +113,57 @@ elif module == "🧬 Classification (Disease Risk)":
 elif module == "🔬 Clustering (Patient Segmentation)":
     st.header("🔬 Patient Segmentation using K-Means")
 
-    uploaded_file = st.file_uploader("Upload clustering CSV", type=["csv"])
-    if uploaded_file:
-        df = pd.read_csv(uploaded_file)
+    file = st.file_uploader("Upload clustering CSV", type=["csv"])
+    if file:
+        df = pd.read_csv(file)
         st.write(df.head())
 
-        numeric_df = df.select_dtypes(include=[np.number])
+        X = df.select_dtypes(include=[np.number])
         scaler = StandardScaler()
-        scaled = scaler.fit_transform(numeric_df)
+        scaled = scaler.fit_transform(X)
 
         kmeans = KMeans(n_clusters=3, random_state=42)
-        df['Cluster'] = kmeans.fit_predict(scaled)
+        df["Cluster"] = kmeans.fit_predict(scaled)
 
-        score = silhouette_score(scaled, df['Cluster'])
+        score = silhouette_score(scaled, df["Cluster"])
         st.success(f"✅ Clustering completed. Silhouette Score: {score:.3f}")
 
-        fig = px.scatter(df, x=numeric_df.columns[0], y=numeric_df.columns[1], color='Cluster',
-                         title="Patient Clusters")
+        fig = px.scatter(df, x=X.columns[0], y=X.columns[1], color="Cluster")
         st.plotly_chart(fig, use_container_width=True)
 
 # =========================
-# 📚 ASSOCIATION RULE MINING
+# 📚 ASSOCIATION RULES
 # =========================
 elif module == "📚 Association Rule Mining":
-    st.header("📚 Mining Comorbidity Associations (Apriori)")
+    st.header("📚 Apriori Association Rules")
 
-    uploaded_file = st.file_uploader("Upload one-hot encoded transactions CSV", type=["csv"])
-    if uploaded_file:
-        df = pd.read_csv(uploaded_file)
+    file = st.file_uploader("Upload one-hot encoded transactions CSV", type=["csv"])
+    if file:
+        df = pd.read_csv(file)
         st.write(df.head())
 
-        if df.select_dtypes(exclude=['number']).shape[1] > 0:
-            st.error("⚠️ Non-numeric data found. Ensure one-hot encoded input.")
-        else:
+        try:
             freq = apriori(df, min_support=0.2, use_colnames=True)
             rules = association_rules(freq, metric="lift", min_threshold=1.0)
-            st.dataframe(rules[['antecedents', 'consequents', 'support', 'confidence', 'lift']])
+            st.dataframe(rules[["antecedents", "consequents", "support", "confidence", "lift"]])
+        except Exception as e:
+            st.error(f"❌ Error: {e}")
 
 # =========================
 # 🩻 CNN (IMAGING)
 # =========================
 elif module == "🩻 CNN (Imaging Diagnostics)":
-    st.header("🩻 CNN-based Pneumonia Detection")
+    st.header("🩻 Pneumonia Detection (CNN Model)")
 
-    img = st.file_uploader("Upload a Chest X-Ray Image", type=["jpg", "png"])
-    if img:
-        temp = Image.open(img).convert("RGB").resize((128, 128))
-        img_array = np.expand_dims(np.array(temp)/255.0, axis=0)
-
-        cnn = Sequential([
-            Conv2D(32, (3,3), activation='relu', input_shape=(128,128,3)),
-            MaxPooling2D(2,2),
-            Flatten(),
-            Dense(64, activation='relu'),
-            Dense(1, activation='sigmoid')
-        ])
-        cnn.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])
-        st.image(temp, caption="Uploaded X-Ray", width=300)
-        st.success("✅ CNN model ready for predictions (demo mode).")
+    file = st.file_uploader("Upload a Chest X-Ray Image", type=["jpg", "png"])
+    if file:
+        img = Image.open(file).convert("RGB").resize((128, 128))
+        st.image(img, caption="Uploaded X-Ray", width=300)
+        st.success("✅ Demo CNN ready (mock prediction).")
 
 # =========================
-# 📊 LSTM (Time Series)
-# =========================
-elif module == "📊 LSTM (Time Series)":
-    st.header("📊 Patient Vital Trends Prediction (LSTM)")
-
-    uploaded_file = st.file_uploader("Upload time series data (vitals.csv)", type=["csv"])
-    if uploaded_file:
-        df = pd.read_csv(uploaded_file)
-        st.line_chart(df.set_index(df.columns[0]))
-        st.info("✅ Data visualized. Use actual vitals for LSTM training in full setup.")
-
-# =========================
-# 💬 CHATBOT (Gemini)
+# 💬 CHATBOT (GEMINI)
 # =========================
 elif module == "💬 Chatbot (Gemini)":
-    st.header("💬 Healthcare Chatbot with Voice & Text (Gemini AI)")
+    st.header("💬 Healthcare Chatbot with Text & Voice (Gemini AI)")
     healthcare_chatbot_component()
