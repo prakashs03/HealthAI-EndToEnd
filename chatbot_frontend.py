@@ -1,119 +1,80 @@
-# =====================================================
-# 🤖 GEMINI HEALTHCARE CHATBOT FRONTEND
-# =====================================================
-
-import os
 import streamlit as st
-import pandas as pd
+import google.generativeai as genai
 import speech_recognition as sr
 from gtts import gTTS
+import tempfile
+import os
 from io import BytesIO
-import base64
-from datetime import datetime
-import google.generativeai as genai
+from pydub import AudioSegment
+from pydub.playback import play
 
-# =====================================================
-# ⚙️ Gemini API Configuration
-# =====================================================
-# Make sure you have added this in Streamlit Secrets
-# (in Streamlit Cloud: Settings → Secrets → add)
-# GEMINI_API_KEY = "your_api_key_here"
+# ============================================================
+# ✅ Load Gemini API key from Streamlit Secrets
+# ============================================================
+try:
+    GEMINI_KEY = st.secrets["GEMINI_API_KEY"]
+except Exception:
+    GEMINI_KEY = os.getenv("GEMINI_API_KEY")
 
-if "GEMINI_API_KEY" not in st.secrets:
-    st.error("❌ Gemini API key not found in Streamlit Secrets. Please add GEMINI_API_KEY.")
-else:
-    genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
+if not GEMINI_KEY:
+    st.error("❌ Gemini API key not found! Please add it in Streamlit Secrets.")
+    st.stop()
 
-# =====================================================
-# 🔊 Voice Input Function
-# =====================================================
-def recognize_speech():
-    recognizer = sr.Recognizer()
+# Configure Gemini API
+genai.configure(api_key=GEMINI_KEY)
+model = genai.GenerativeModel("gemini-1.5-flash")
+
+# ============================================================
+# 🎙️ Function for Speech Input
+# ============================================================
+def listen_to_user():
+    r = sr.Recognizer()
     with sr.Microphone() as source:
-        st.info("🎙 Speak now...")
-        audio = recognizer.listen(source)
+        st.info("🎤 Listening... Speak now.")
+        audio = r.listen(source)
         try:
-            text = recognizer.recognize_google(audio)
-            st.success(f"✅ You said: {text}")
+            text = r.recognize_google(audio)
+            st.success(f"🗣️ You said: {text}")
             return text
         except sr.UnknownValueError:
-            st.error("❌ Could not understand your speech. Please try again.")
-            return None
+            st.warning("Sorry, I couldn’t understand you. Try again!")
+            return ""
         except sr.RequestError:
-            st.error("⚠️ Speech Recognition service error.")
-            return None
+            st.error("Speech recognition service unavailable.")
+            return ""
 
-# =====================================================
-# 🔉 Text-to-Speech Function
-# =====================================================
-def speak_response(text):
-    tts = gTTS(text)
-    audio_fp = BytesIO()
-    tts.write_to_fp(audio_fp)
-    audio_fp.seek(0)
-    audio_bytes = audio_fp.read()
-    audio_base64 = base64.b64encode(audio_bytes).decode()
-    st.audio(f"data:audio/mp3;base64,{audio_base64}", format="audio/mp3")
-
-# =====================================================
-# 🧠 Gemini Chatbot Function
-# =====================================================
-def gemini_response(user_input):
+# ============================================================
+# 🔊 Function for Voice Output
+# ============================================================
+def speak_text(text):
     try:
-        model = genai.GenerativeModel("gemini-pro")
-        response = model.generate_content(user_input)
-        return response.text
+        tts = gTTS(text=text, lang='en')
+        with tempfile.NamedTemporaryFile(delete=False, suffix=".mp3") as fp:
+            tts.save(fp.name)
+            audio_data = open(fp.name, "rb").read()
+        st.audio(audio_data, format="audio/mp3")
     except Exception as e:
-        st.error(f"⚠️ Gemini API Error: {e}")
-        return "I'm having trouble responding right now. Please try again later."
+        st.warning(f"Audio playback failed: {e}")
 
-# =====================================================
-# 🧾 Feedback Logger
-# =====================================================
-def log_feedback(user_input, response):
-    feedback_dir = "data/feedback"
-    os.makedirs(feedback_dir, exist_ok=True)
-    log_path = os.path.join(feedback_dir, "feedback_log.csv")
-
-    entry = {
-        "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-        "user_input": user_input,
-        "bot_response": response
-    }
-
-    if not os.path.exists(log_path):
-        pd.DataFrame([entry]).to_csv(log_path, index=False)
-    else:
-        log_df = pd.read_csv(log_path)
-        log_df = pd.concat([log_df, pd.DataFrame([entry])], ignore_index=True)
-        log_df.to_csv(log_path, index=False)
-
-# =====================================================
-# 💬 Chatbot Streamlit UI
-# =====================================================
+# ============================================================
+# 💬 Healthcare Chatbot Component
+# ============================================================
 def healthcare_chatbot_component():
-    st.header("🩺 Gemini Healthcare Assistant")
+    st.header("🩺 Gemini-Powered Healthcare Chatbot 🤖")
+    st.markdown("Ask your **health-related query** in English or Tamil. You can also use your voice!")
 
-    col1, col2 = st.columns([3, 1])
-    with col1:
-        user_input = st.text_area("💭 Type your health-related question here:", height=100)
-    with col2:
-        if st.button("🎙 Speak"):
-            voice_text = recognize_speech()
-            if voice_text:
-                user_input = voice_text
+    user_query = st.text_input("💬 Type your question below:")
+    voice_input = st.button("🎤 Speak instead")
 
-    if st.button("Send"):
-        if not user_input.strip():
-            st.warning("⚠️ Please enter or speak something.")
-        else:
-            with st.spinner("Gemini is thinking..."):
-                response = gemini_response(user_input)
-                st.markdown("### 💬 Gemini Response:")
-                st.success(response)
-                speak_response(response)
-                log_feedback(user_input, response)
-                st.info("✅ Chat logged successfully!")
+    if voice_input:
+        user_query = listen_to_user()
 
-    st.markdown("---")
-    st.caption("This chatbot is powered by Google Gemini for healthcare assistance.")
+    if user_query:
+        with st.spinner("🤖 Thinking..."):
+            try:
+                response = model.generate_content(user_query)
+                st.success("✅ Response:")
+                st.markdown(response.text)
+                speak_text(response.text)
+            except Exception as e:
+                st.error(f"Gemini Error: {e}")
