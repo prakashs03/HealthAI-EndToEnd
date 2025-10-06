@@ -1,33 +1,11 @@
-# Core
-streamlit
-fastapi
-uvicorn
-
-# Data & ML
-pandas
-numpy
-scikit-learn
-tensorflow
-torch
-opencv-python-headless
-matplotlib
-plotly
-mlxtend
-google-generativeai
-speechrecognition
-gtts
-pydub
-# NLP & Translation
-textblob
-nltk
-deep-translator
-google-generativeai
-
-# Audio (for chatbot voice)
-gtts
-speechrecognition
-pydub
-
-# Utilities
-Pillow
-python-dotenv
+streamlit>=1.18
+pandas>=1.5
+numpy>=1.23
+scikit-learn>=1.2
+plotly>=5.0
+mlxtend>=0.21.0
+deep-translator>=1.8.1
+textblob>=0.17.1
+google-generative-ai>=0.3.0    # optional: for Gemini (install only if available in environment)
+# If using image processing / demo CNN:
+Pillow>=9.0
