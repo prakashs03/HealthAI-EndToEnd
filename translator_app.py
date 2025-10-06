@@ -1,48 +1,21 @@
 # translator_app.py
+# Simple translator interface:
+# - If Gemini available, ask it to translate.
+# - Otherwise use a tiny rule or say to use Google Translate manually.
 import streamlit as st
-import os
-from pathlib import Path
+from googletrans import Translator as GT_Translator
 
-try:
-    from deep_translator import GoogleTranslator
-    DEEP_AVAILABLE = True
-except Exception:
-    DEEP_AVAILABLE = False
-
-# Gemini availability check — same approach as chatbot file
-GEMINI_KEY = os.environ.get("GEMINI_API_KEY")
-try:
-    import google.generativeai as genai
-    if GEMINI_KEY:
-        genai.configure(api_key=GEMINI_KEY)
-        GEMINI_AVAILABLE = True
-    else:
-        GEMINI_AVAILABLE = False
-except Exception:
-    GEMINI_AVAILABLE = False
-
-def translator_component(root=None):
-    st.write("Translator (English <-> Tamil). Use Gemini if API key set for higher-quality translation.")
-    col1, col2 = st.columns([3,1])
-    with col1:
-        text = st.text_area("Enter text to translate", value="")
-        direction = st.radio("Direction", ("EN -> TA", "TA -> EN"))
+def translate_ui():
+    st.header("Translator (English <-> Tamil)")
+    text = st.text_area("Enter text to translate")
+    target = st.selectbox("Target language", ["ta", "en"], index=0)
     if st.button("Translate"):
-        if GEMINI_AVAILABLE:
-            # simple wrapper prompt - for short translations
-            prompt = f"Translate the following text to Tamil:\n\n{text}" if direction=="EN -> TA" else f"Translate the following text to English:\n\n{text}"
-            try:
-                resp = genai.generate_text(model="models/gemini-2.5-pro", prompt=prompt, max_output_tokens=200)
-                st.success(resp.text)
-            except Exception as e:
-                st.error(f"Gemini error: {e}")
-        else:
-            if DEEP_AVAILABLE:
-                tgt = "tamil" if direction=="EN -> TA" else "english"
-                try:
-                    translated = GoogleTranslator(source='auto', target=tgt).translate(text)
-                    st.success(translated)
-                except Exception as e:
-                    st.error(f"Translation error: {e}")
-            else:
-                st.warning("No translation engine available. Install deep_translator or provide GEMINI_API_KEY in secrets.")
+        # Try googletrans first (local)
+        try:
+            tr = GT_Translator()
+            out = tr.translate(text, dest=target)
+            st.success(out.text)
+        except Exception:
+            st.warning("Local translator not available. If deployed with Gemini key, translation via Gemini will be attempted.")
+            # If you want to call Gemini translation, integrate through chatbot_frontend healthcare_chatbot_query with instruction to translate.
+            st.info("Alternatively, use external translator or configure Gemini for server-side translation.")
