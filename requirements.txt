@@ -13,7 +13,10 @@ opencv-python-headless
 matplotlib
 plotly
 mlxtend
-
+google-generativeai
+speechrecognition
+gtts
+pydub
 # NLP & Translation
 textblob
 nltk
