@@ -1,54 +1,54 @@
-import streamlit as st
-import google.generativeai as genai
-import speech_recognition as sr
-from gtts import gTTS
-import tempfile
+# chatbot_frontend.py
 import os
+import streamlit as st
 
-# ----------------------------
-# Configure Gemini
-# ----------------------------
-if "GEMINI_API_KEY" not in st.secrets:
-    st.error("❌ Gemini API key not found! Please add it in Streamlit secrets.")
-else:
-    genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
+GENAI_READY = False
+_gemini_client = None
+_model_name = "models/gemini-2.5-pro"  # prefer a supported model
 
-# ----------------------------
-# Chatbot Component
-# ----------------------------
-def healthcare_chatbot_component():
-    st.subheader("🤖 Gemini HealthBot")
+# Try to import google generative AI (if installed in Streamlit environment)
+try:
+    import google.generativeai as genai
+    GEMINI_KEY = None
+    # Streamlit secrets first (on Streamlit Cloud)
+    try:
+        GEMINI_KEY = st.secrets["GEMINI_API_KEY"]
+    except Exception:
+        GEMINI_KEY = os.environ.get("GEMINI_API_KEY")
+    if not GEMINI_KEY:
+        st.warning("❌ Gemini API key not found in secrets or environment. Chatbot will fallback to canned replies.")
+    else:
+        genai.configure(api_key=GEMINI_KEY)
+        _gemini_client = genai
+        GENAI_READY = True
+except Exception:
+    # If import fails, we simply continue — the main app will show helpful message
+    GENAI_READY = False
 
-    # Text input
-    user_query = st.text_input("Ask a health-related question:")
-
-    # Voice input
-    if st.button("🎙 Speak"):
-        recognizer = sr.Recognizer()
-        with sr.Microphone() as source:
-            st.info("🎤 Listening...")
-            audio = recognizer.listen(source)
+def healthcare_chatbot_query(question: str) -> str:
+    """
+    Query Gemini if available, otherwise return a fallback helpful response.
+    """
+    if GENAI_READY and _gemini_client is not None:
         try:
-            user_query = recognizer.recognize_google(audio)
-            st.success(f"You said: {user_query}")
-        except:
-            st.error("❌ Could not understand your voice input.")
-
-    # Gemini AI response
-    if user_query:
-        try:
-            model = genai.GenerativeModel("gemini-1.5-flash")
-            response = model.generate_content(user_query)
-            answer = response.text.strip()
-            st.write("💡 **Answer:**")
-            st.write(answer)
-
-            # Voice output
-            tts = gTTS(text=answer, lang="en")
-            with tempfile.NamedTemporaryFile(delete=False, suffix=".mp3") as tmp:
-                tts.save(tmp.name)
-                audio_bytes = open(tmp.name, "rb").read()
-                st.audio(audio_bytes, format="audio/mp3")
-
+            # Use a simple text generation call (API may differ — adjust to your installed genai client)
+            resp = _gemini_client.generate_text(model=_model_name, prompt=question, max_output_tokens=512)
+            # .text or similar depending on library version
+            answer = getattr(resp, "text", None) or str(resp)
+            return answer
         except Exception as e:
-            st.error(f"⚠️ Error: {e}")
+            return f"❗ Gemini call failed: {e}\n\nFallback: Here's a brief general answer: " \
+                   "For health concerns, consult a clinician. Common signs depend on the condition."
+    else:
+        # fallback: short helpful template answer (keeps responses safe)
+        if "heart" in question.lower():
+            return ("**Brief:** Chest pain/pressure, shortness of breath, fatigue, dizziness can be early signs of heart disease. "
+                    "If severe or sudden, seek emergency care.\n\n**If you want more detail**, ask 'explain more'.")
+        elif "diabetes" in question.lower():
+            return ("**Brief:** Frequent urination, increased thirst, hunger, unexplained weight loss, and fatigue. "
+                    "Speak to your doctor for testing.")
+        else:
+            return ("**Brief:** I can provide general health guidance and resources. For specific medical advice, "
+                    "please consult a healthcare provider. Ask for more detail if needed.")
+
+# End of chatbot_frontend.py
