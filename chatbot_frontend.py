@@ -1,62 +1,64 @@
 # chatbot_frontend.py
+# Wrapper to call Gemini (if available) or fallback to a small local responder.
+import os
 import streamlit as st
-import re
+import json
+GENIE_AVAILABLE = False
 
-# try to import google.generativeai (Gemini) - optional
+# Try to import Google Generative AI client if available (user must install and configure)
 try:
     import google.generativeai as genai
-    GENAI_AVAILABLE = True
+    GENIE_AVAILABLE = True
 except Exception:
-    GENAI_AVAILABLE = False
+    GENIE_AVAILABLE = False
 
-def _genai_response(question: str) -> str:
-    """Return response using Gemini if available and key present; otherwise fallback."""
-    # If secrets has GEMINI_API_KEY and library is present, call it.
-    try:
-        if GENAI_AVAILABLE and "GEMINI_API_KEY" in st.secrets:
-            genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
-            model = "models/gemini-2.5-flash"  # a supported model on the user's list
-            resp = genai.generate_text(model=model, text=question)
-            # new genai clients may differ; attempt multiple attributes
-            text = ""
-            if hasattr(resp, "text"):
-                text = resp.text
-            elif isinstance(resp, dict) and "candidates" in resp:
-                text = resp["candidates"][0].get("content", "")
-            else:
-                text = str(resp)
-            return text.strip()
-    except Exception as e:
-        # fallback below
-        pass
+def _gemini_query(prompt, model="models/gemini-2.5-pro"):
+    """Call the Gemini API via google.generativeai if available."""
+    if not GENIE_AVAILABLE:
+        raise RuntimeError("Gemini SDK not installed")
+    api_key = st.secrets.get("GEMINI_API_KEY", None)
+    if not api_key:
+        raise RuntimeError("Gemini API key missing in Streamlit secrets")
+    genai.configure(api_key=api_key)
+    response = genai.generate_text(model=model, prompt=prompt, max_output_tokens=512)
+    if hasattr(response, "text"):
+        return response.text
+    # fallback
+    return str(response)
 
-    # Fallback simple answer: take keywords and answer concisely
-    q = question.lower()
-    if "heart" in q or "chest" in q or "heart disease" in q:
-        return "Early signs: chest discomfort, breathlessness, unusual fatigue — consult a doctor if present."
-    if "diabetes" in q:
-        return "Common signs: frequent urination, thirst, fatigue, unexplained weight loss; see provider for tests."
-    if re.search(r'[\u0B80-\u0BFF]', question):  # Tamil unicode detection
-        # short Tamil fallback
-        return "முன் அறிகுறிகள்: மார்பு வலி, மூச்சுத் திணறல் மற்றும் சோர்வு — மருத்துவரை சந்திக்கவும்."
-    return "I don't have internet access here; please ask a simple medical question or enable Gemini API."
+def healthcare_chatbot_query(query, short=True, explain=False):
+    """
+    Query Gemini if available. If short=True, request 1-2 line answer.
+    If explain=True, request detailed answer.
+    If Gemini not available, run fallback simple responses.
+    """
+    sys_prompt = "You are a medical assistant. Provide accurate, concise health information. Include disclaimers."
+    instruction = sys_prompt + "\nUser: " + query
+    if short:
+        instruction += "\nAnswer in 1-2 lines."
+    if explain:
+        instruction += "\nThen provide a detailed explanation with bullet points."
 
-def healthcare_chatbot_component():
-    st.subheader("💬 Healthcare Chatbot")
-    st.write("Type a question below (the model will reply concisely). If you want more detail, add `Please explain more.`")
-    user_q = st.text_input("Ask a health question (text):")
-    if st.button("Get Answer"):
-        if not user_q.strip():
-            st.warning("Please enter a question.")
-        else:
-            with st.spinner("Getting answer..."):
-                answer = _genai_response(user_q)
-            # default behavior: concise one- or two-line answer. If user appended 'explain', return longer.
-            if "explain" in user_q.lower() or "detail" in user_q.lower():
-                st.info(answer)
-            else:
-                # Show concise: first sentence only
-                concise = answer.split(".")[0]
-                if concise.strip() == "":
-                    concise = answer
-                st.success(concise.strip())
+    if GENIE_AVAILABLE:
+        try:
+            text = _gemini_query(instruction, model=st.secrets.get("GEMINI_MODEL", "models/gemini-2.5-pro"))
+            return text
+        except Exception as e:
+            return f"⚠️ Gemini error: {e}\n\nFallback answer:\n" + _local_bot(query, short, explain)
+    else:
+        return _local_bot(query, short, explain)
+
+def _local_bot(query, short=True, explain=False):
+    """Lightweight fallback: keyword-based answers (works offline)."""
+    q = query.lower()
+    if "heart" in q and "symptom" in q or "sign" in q:
+        ans = "Chest discomfort, shortness of breath, and unexplained fatigue are common early signs of heart disease."
+    elif "sugar" in q or "diabetes" in q or "prevent" in q:
+        ans = "Reduce added sugars, monitor portions, stay active, and consult a dietitian."
+    elif "covid" in q or "pneumonia" in q:
+        ans = "Fever, cough, and difficulty breathing — seek medical attention if severe."
+    else:
+        ans = "Sorry, I don't have a full answer offline. Please ask again or enable Gemini for comprehensive answers."
+    if explain:
+        ans += "\n\nExplanation:\n- Keep healthy weight\n- Exercise regularly\n- Monitor key vitals and consult clinician for tests."
+    return ans
