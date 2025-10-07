@@ -1,23 +1,31 @@
 # translator_app.py
 import streamlit as st
-from transformers import MarianTokenizer, MarianMTModel
-import torch
 
-def translator_ui():
-    st.subheader("🌐 Translator (EN ↔ other languages)")
-    text = st.text_area("Enter text to translate (English input):")
-    tgt = st.selectbox("Translate to:", ["ta", "hi", "es", "fr", "de"])
-    if st.button("Translate"):
-        if not text.strip():
-            st.warning("Please enter text.")
-            return
-        model_name = f"Helsinki-NLP/opus-mt-en-{tgt}"
+# Try Gemini translation if available
+try:
+    import google.generativeai as genai
+    GEMINI = True
+except Exception:
+    GEMINI = False
+
+def translate_text(text, target="ta"):
+    """Translate text using Gemini if present, default target Tamil (ta)."""
+    if GEMINI:
+        api_key = st.secrets.get("GEMINI_API_KEY", None)
+        if not api_key:
+            return "⚠️ Gemini key not found. Please set GEMINI_API_KEY in Streamlit secrets."
+        genai.configure(api_key=api_key)
+        prompt = f"Translate the following to Tamil: {text}"
         try:
-            tokenizer = MarianTokenizer.from_pretrained(model_name)
-            model = MarianMTModel.from_pretrained(model_name)
-            batch = tokenizer([text], return_tensors="pt", truncation=True, padding=True)
-            translated = model.generate(**batch)
-            out = tokenizer.decode(translated[0], skip_special_tokens=True)
-            st.success(out)
+            out = genai.generate_text(model=st.secrets.get("GEMINI_MODEL","models/gemini-2.5-pro"), prompt=prompt)
+            return out.text if hasattr(out, "text") else str(out)
         except Exception as e:
-            st.error("Translation model not available in this environment. Ensure internet access and that transformers is installed.")
+            return f"Gemini translation error: {e}\n\nFallback: {fallback_translate(text, target)}"
+    else:
+        return fallback_translate(text, target)
+
+def fallback_translate(text, target="ta"):
+    # Very small rule-based fallback (not real translation).
+    if target == "ta":
+        return "(Translation unavailable offline) " + text
+    return text
